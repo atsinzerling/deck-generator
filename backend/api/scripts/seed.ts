@@ -1,33 +1,33 @@
-import { getDB } from "../src/db";
+import { query, closeDB } from "../src/db";
 
 async function main() {
-  const db = await getDB();
+  try {
+    // Sample deck
+    const deckResult = await query(`
+      INSERT INTO decks (name, language_from, language_to)
+      VALUES ($1, $2, $3)
+      RETURNING id
+    `, ['Basic Greetings', 'English', 'Spanish']);
 
-  // Sample deck
-  const result = await db.run(`
-    INSERT INTO decks (name, language_from, language_to)
-    VALUES ('Basic Greetings', 'English', 'Spanish')
-  `);
+    const deckId = deckResult.rows[0].id;
 
-  const deckId = result.lastID;
+    // Sample word pairs
+    const samplePairs = [
+      ['Hello', 'Hola'],
+      ['Good morning', 'Buenos días'],
+      ['Good night', 'Buenas noches'],
+      ['Thank you', 'Gracias'],
+    ];
 
-  // Sample word pairs
-  const samplePairs = [
-    ['Hello', 'Hola'],
-    ['Good morning', 'Buenos días'],
-    ['Good night', 'Buenas noches'],
-    ['Thank you', 'Gracias'],
-  ];
+    const insertWordPairText = 'INSERT INTO wordpairs (deck_id, word_original, word_translation) VALUES ($1, $2, $3)';
+    for (const [original, translation] of samplePairs) {
+      await query(insertWordPairText, [deckId, original, translation]);
+    }
 
-  for (const [original, translation] of samplePairs) {
-    await db.run(`
-      INSERT INTO wordpairs (deck_id, word_original, word_translation)
-      VALUES (?, ?, ?)
-    `, [deckId, original, translation]);
+    console.log('Seed completed successfully');
+  } finally {
+    await closeDB();
   }
-
-  console.log('Seed completed successfully');
-  process.exit(0);
 }
 
 main().catch(error => {

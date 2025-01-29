@@ -1,15 +1,20 @@
-import sqlite3 from 'sqlite3'
-import { Database, open } from 'sqlite'
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
 
-let db: undefined | Database<sqlite3.Database, sqlite3.Statement>
+dotenv.config();
 
-export async function getDB() {
-    if (!db) {
-        db = await open({
-            filename: 'db.sqlite',
-            driver: sqlite3.Database,
-            mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_SHAREDCACHE
-        })
-    }
-    return db
+const pool = new Pool({
+    host: process.env.PG_HOST,
+    port: parseInt(process.env.PG_PORT || '5432', 10),
+    user: process.env.PG_USER,
+    password: process.env.PG_PASSWORD,
+    database: process.env.PG_DATABASE,
+});
+
+export async function query(text: string, params?: any[]) {
+    return pool.query(text, params);
+}
+
+export async function closeDB() {
+    await pool.end();
 }

@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import 'express-async-errors';
-import { getDB } from './db';
+import { closeDB } from './db';
 import { DeckService } from './services/deck.service';
 import { DeckController } from './controllers/deck.controller';
 import { setupDeckRoutes } from './routes/deck.routes';
@@ -21,8 +21,7 @@ async function main() {
   app.use(express.json());
   app.use(requestLogger);
 
-  const db = await getDB();
-  const deckService = new DeckService(db);
+  const deckService = new DeckService();
 
   const llmConfig: LLMConfig = {
     apiKey: process.env.OPENAI_API_KEY!,
@@ -43,8 +42,22 @@ async function main() {
   });
 }
 
-main().catch((error) => {
-  logger.error('Failed to start server', error);
-  console.error(error);
-  process.exit(1);
+// Add these handlers
+process.on('SIGINT', async () => {
+    logger.info('Received SIGINT. Cleaning up...');
+    await closeDB();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    logger.info('Received SIGTERM. Cleaning up...');
+    await closeDB();
+    process.exit(0);
+});
+
+// Update the error handler in main()
+main().catch(async (error) => {
+    logger.error('Failed to start server', error);
+    await closeDB();
+    process.exit(1);
 }); 
