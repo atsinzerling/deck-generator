@@ -41,4 +41,7 @@ Thumbs.db
 
 # Optional: local development files
 /uploads
-/temp 
+/temp
+
+# New file
+/db.sqlite 
