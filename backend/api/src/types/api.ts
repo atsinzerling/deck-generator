@@ -1,42 +1,52 @@
-import { Deck, WordPair } from "./deck";
-import * as Endpoints from "./endpoints";
+import { Deck, WordPair, DeckWithWordPairs} from "./deck";
 
 export interface APIError {
   message: string;
   status: number;
 }
 
-// Re-export endpoint types for easier imports
-export type {
-  Endpoints.GenerateDeckRequest,
-  Endpoints.GenerateDeckResponse,
-  Endpoints.RefineDeckRequest,
-  Endpoints.RefineDeckResponse,
-  Endpoints.GetAllDecksResponse,
-  Endpoints.GetDeckWordpairsResponse,
-  Endpoints.CreateDeckRequest,
-  Endpoints.CreateDeckResponse,
-  Endpoints.UpdateDeckRequest,
-  Endpoints.UpdateDeckResponse,
-};
+export interface CreateDeckRequest extends DeckWithWordPairs {
+}
 
-export interface GenerateRequest {
+export interface CreateDeckResponse extends Deck {
+}
+
+export interface UpdateDeckRequest extends DeckWithWordPairs {
+  id: string;
+}
+
+export interface UpdateDeckResponse extends Deck {
+}
+
+//GetAllDecksRequest is empty
+//GetAllDecksResponse is Deck[]
+export interface GetAllDecksResponse extends Deck {
+}
+
+//GetDeckWordpairsRequest is deckId
+//GetDeckWordpairsResponse is WordPair[]
+export interface GetDeckWordpairsResponse extends WordPair {
+}
+
+//GetDeckByIdRequest is deckId
+export interface GetDeckByIdResponse extends Deck {
+}
+
+//DeleteDeckRequest is deckId
+//DeleteDeckResponse is void
+
+export interface GenerateDeckRequest {
   prompt: string;
 }
 
-export interface RefineRequest {
+export interface GenerateDeckResponse extends DeckWithWordPairs {
+}
+
+export interface RefineDeckRequest {
   prompt: string;
   history: string[];
-  current_deck: Deck;
-}
-
-export interface SaveDeckRequest {
-  name: string;
-  language_from: string;
-  language_to: string;
-  wordpairs: WordPair[];
-}
-
-export interface UpdateDeckRequest extends SaveDeckRequest {
-  id: number;
+  current_deck: DeckWithWordPairs;
 } 
+
+export interface RefineDeckResponse extends DeckWithWordPairs {
+}

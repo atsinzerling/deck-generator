@@ -1,19 +1,27 @@
 export interface WordPair {
+  id: string;
+  deck_id: string;
+  word_original: string;
+  word_translation: string;
+  created_at: string;
+}
+
+export interface ShortWordPair {
   word_original: string;
   word_translation: string;
 }
 
 export interface Deck {
-  id?: number;
+  id: string;
   name: string;
   language_from: string;
   language_to: string;
-  wordpairs?: WordPair[];
+  created_at: string;
 }
 
-export interface GenerateResponse {
-  name: string;
-  language_from: string;
-  language_to: string;
-  deck: WordPair[];
-} 
+export interface DeckWithWordPairs{
+	name: string;
+	language_from: string;
+	language_to: string;
+	wordpairs: ShortWordPair[];
+}

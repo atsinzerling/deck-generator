@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 import { CustomError } from '../errors/CustomError';
+import { InternalServerError } from '../errors/InternalServerError';
 
 export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
   if (err instanceof CustomError) {

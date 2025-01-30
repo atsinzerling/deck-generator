@@ -10,6 +10,7 @@ export function setupDeckRoutes(controller: DeckController): Router {
 
   // CRUD endpoints
   router.get('/', controller.getAllDecks.bind(controller));
+  router.get('/:deckId', controller.getDeckById.bind(controller));
   router.get('/:deckId/wordpairs', controller.getDeckWordpairs.bind(controller));
   router.post('/', controller.createDeck.bind(controller));
   router.put('/:deckId', controller.updateDeck.bind(controller));

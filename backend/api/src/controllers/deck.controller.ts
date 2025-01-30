@@ -2,21 +2,9 @@ import { Request, Response } from 'express';
 import { DeckService } from '../services/deck.service';
 import { LLMProvider } from '../services/llm/types';
 import { GENERATE_SYSTEM_PROMPT, REFINE_SYSTEM_PROMPT } from '../config/prompts';
-import { APIError } from '../types/api';
-import { BadRequestError, NotFoundError } from '../errors';
+import { APIError, GenerateDeckResponse, RefineDeckResponse } from '../types/api';
+import { BadRequestError, NotFoundError, InternalServerError } from '../errors';
 import logger from '../utils/logger';
-import {
-  GenerateDeckRequest,
-  GenerateDeckResponse,
-  RefineDeckRequest,
-  RefineDeckResponse,
-  GetAllDecksResponse,
-  GetDeckWordpairsResponse,
-  CreateDeckRequest,
-  CreateDeckResponse,
-  UpdateDeckRequest,
-  UpdateDeckResponse
-} from '../types/endpoints';
 
 export class DeckController {
   constructor(
@@ -24,15 +12,8 @@ export class DeckController {
     private llmProvider: LLMProvider
   ) {}
 
-  handleError(error: unknown, res: Response) {
-    const apiError: APIError = {
-      message: error instanceof Error ? error.message : 'An unknown error occurred',
-      status: 500
-    };
-    res.status(apiError.status).json({ error: apiError.message });
-  }
 
-  async generateDeck(req: Request<{}, {}, GenerateDeckRequest>, res: Response<GenerateDeckResponse | APIError>) {
+  async generateDeck(req: Request, res: Response) {
     try {
       const { prompt } = req.body;
       if (!prompt) {
@@ -47,7 +28,7 @@ export class DeckController {
         GENERATE_SYSTEM_PROMPT,
         llmPrompt
       );
-      const deck: GenerateDeckResponse = JSON.parse(result);
+      const deck : GenerateDeckResponse = JSON.parse(result);
       
       logger.info(`Deck generated successfully: ${deck.name}`);
       logger.debug(`LLM Response: ${result}`); // Detailed response
@@ -55,11 +36,11 @@ export class DeckController {
       res.json(deck);
     } catch (error) {
       logger.error(`Error in generateDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.handleError(error, res);
+      throw error;
     }
   }
 
-  async refineDeck(req: Request<{}, {}, RefineDeckRequest>, res: Response<RefineDeckResponse | APIError>) {
+  async refineDeck(req: Request, res: Response) {
     try {
       const { prompt, history, current_deck } = req.body;
       if (!prompt || !history || !current_deck) {
@@ -71,7 +52,7 @@ export class DeckController {
       logger.debug(`LLM Refinement Prompt: ${userPrompt}`); // Detailed prompt
 
       const result = await this.llmProvider.generateCompletion(REFINE_SYSTEM_PROMPT, userPrompt);
-      const refinedDeck: RefineDeckResponse = JSON.parse(result);
+      const refinedDeck : RefineDeckResponse = JSON.parse(result);
       
       logger.info(`Deck refined successfully: ${refinedDeck.name}`);
       logger.debug(`LLM Refinement Response: ${result}`); // Detailed response
@@ -79,24 +60,40 @@ export class DeckController {
       res.json(refinedDeck);
     } catch (error) {
       logger.error(`Error in refineDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.handleError(error, res);
+      throw error;
     }
   }
 
   // CRUD operations
-
-  async getAllDecks(req: Request, res: Response<GetAllDecksResponse[] | APIError>) {
+  async getAllDecks(req: Request, res: Response) {
     try {
       logger.info('Fetching all decks');
       const decks = await this.deckService.getAllDecks();
       res.json(decks);
     } catch (error) {
       logger.error(`Error in getAllDecks: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.handleError(error, res);
+      throw error;
     }
   }
 
-  async getDeckWordpairs(req: Request<{ deckId: string }, {}, {}>, res: Response<GetDeckWordpairsResponse[] | APIError>) {
+  async getDeckById(req: Request, res: Response) {
+    try {
+      const deckId = parseInt(req.params.deckId);
+      if (isNaN(deckId)) {
+        throw new BadRequestError('Invalid deckId');
+      }
+      const deck = await this.deckService.getDeckById(deckId);
+      if (!deck) {
+        throw new NotFoundError(`Deck with ID ${deckId} not found`);
+      }
+      res.json(deck);
+    } catch (error) {
+      logger.error(`Error in getDeckById: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
+    }
+  }
+
+  async getDeckWordpairs(req: Request, res: Response) {
     try {
       const deckId = parseInt(req.params.deckId);
       if (isNaN(deckId)) {
@@ -110,51 +107,47 @@ export class DeckController {
       res.json(wordpairs);
     } catch (error) {
       logger.error(`Error in getDeckWordpairs: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.handleError(error, res);
+      throw error;
     }
   }
 
-  async createDeck(req: Request<{}, {}, CreateDeckRequest>, res: Response<CreateDeckResponse | APIError>) {
+  async createDeck(req: Request, res: Response) {
     try {
       const { name, language_from, language_to, wordpairs } = req.body;
       logger.info(`Creating new deck: ${name}, from ${language_from} to ${language_to}`);
       
       const deck = await this.deckService.createDeck(req.body);
+      if (!deck) {
+        throw new InternalServerError('Failed to create deck');
+      }
       logger.info(`Deck created successfully with ID: ${deck.id}`);
       
       res.status(201).json(deck);
     } catch (error) {
       logger.error(`Error in createDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.handleError(error, res);
+      throw error;
     }
   }
 
-  async updateDeck(req: Request<{ deckId: string }, {}, UpdateDeckRequest>, res: Response<UpdateDeckResponse | APIError>) {
+  async updateDeck(req: Request, res: Response) {
     try {
-      const deckId = parseInt(req.params.deckId);
-      if (isNaN(deckId)) {
-        throw new BadRequestError('Invalid deckId');
-      }
-
       const { id, name, language_from, language_to, wordpairs } = req.body;
-
-      if (id !== deckId) {
-        throw new BadRequestError('deckId in URL and body do not match');
-      }
-
       logger.info(`Updating deck ID: ${id} with name: ${name}`);
       
       const deck = await this.deckService.updateDeck(req.body);
+      if (!deck) {
+        throw new InternalServerError('Failed to update deck');
+      }
       logger.info(`Deck updated successfully: ${deck.name}`);
       
       res.json(deck);
     } catch (error) {
       logger.error(`Error in updateDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.handleError(error, res);
+      throw error;
     }
   }
 
-  async deleteDeck(req: Request<{ deckId: string }, {}, {}>, res: Response<void | APIError>) {
+  async deleteDeck(req: Request, res: Response) {
     try {
       const deckId = parseInt(req.params.deckId);
       if (isNaN(deckId)) {
@@ -168,7 +161,7 @@ export class DeckController {
       res.status(204).send();
     } catch (error) {
       logger.error(`Error in deleteDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.handleError(error, res);
+      throw error;
     }
   }
 } 

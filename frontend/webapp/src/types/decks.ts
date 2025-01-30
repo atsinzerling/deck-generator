@@ -25,17 +25,3 @@ export interface ShortWordPair {
   word_original: string;
   word_translation: string;
 }
-
-export interface UpdateDeckPayload extends DeckWithWordPairs {
-  id: string;
-}
-
-export interface GenerateDeckPayload {
-  prompt: string;
-}
-
-export interface RefineDeckPayload {
-  prompt: string;
-  history: string[];
-  current_deck: DeckWithWordPairs;
-} 
