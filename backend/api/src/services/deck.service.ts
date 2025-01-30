@@ -1,16 +1,25 @@
 import { query } from '../db';
-import { WordPair } from '../types/deck';
-import { SaveDeckRequest, UpdateDeckRequest } from '../types/api';
+import { WordPair, Deck } from '../types/deck';
+import { 
+  SaveDeckRequest, 
+  UpdateDeckRequest,
+  GenerateDeckResponse,
+  RefineDeckResponse,
+  GetAllDecksResponse,
+  GetDeckWordpairsResponse,
+  CreateDeckResponse,
+  UpdateDeckResponse
+} from '../types/endpoints';
 
 export class DeckService {
   constructor() {}
 
-  async getAllDecks() {
+  async getAllDecks(): Promise<GetAllDecksResponse[]> {
     const result = await query('SELECT * FROM decks ORDER BY created_at DESC');
     return result.rows;
   }
 
-  async getDeckWordpairs(deckId: number) {
+  async getDeckWordpairs(deckId: number): Promise<GetDeckWordpairsResponse[]> {
     const result = await query(
       'SELECT * FROM wordpairs WHERE deck_id = $1 ORDER BY created_at ASC',
       [deckId]
@@ -18,25 +27,25 @@ export class DeckService {
     return result.rows;
   }
 
-  async createDeck(request: SaveDeckRequest) {
+  async createDeck(request: SaveDeckRequest): Promise<CreateDeckResponse> {
     const { name, language_from, language_to, wordpairs } = request;
     
     const result = await query(
-      'INSERT INTO decks (name, language_from, language_to) VALUES ($1, $2, $3) RETURNING id',
+      'INSERT INTO decks (name, language_from, language_to) VALUES ($1, $2, $3) RETURNING id, name, language_from, language_to',
       [name, language_from, language_to]
     );
 
-    const deckId = result.rows[0].id;
+    const deck: CreateDeckResponse = result.rows[0];
     
     const insertWordPairText = 'INSERT INTO wordpairs (deck_id, word_original, word_translation) VALUES ($1, $2, $3)';
     for (const pair of wordpairs) {
-      await query(insertWordPairText, [deckId, pair.word_original, pair.word_translation]);
+      await query(insertWordPairText, [deck.id, pair.word_original, pair.word_translation]);
     }
 
-    return { id: deckId, name, language_from, language_to, wordpairs };
+    return deck;
   }
 
-  async updateDeck(request: UpdateDeckRequest) {
+  async updateDeck(request: UpdateDeckRequest): Promise<UpdateDeckResponse> {
     const { id, name, language_from, language_to, wordpairs } = request;
     
     await query(
@@ -51,11 +60,20 @@ export class DeckService {
       await query(insertWordPairText, [id, pair.word_original, pair.word_translation]);
     }
 
-    return { id, name, language_from, language_to, wordpairs };
+    const updatedDeck: UpdateDeckResponse = {
+      id,
+      name,
+      language_from,
+      language_to
+    };
+
+    return updatedDeck;
   }
 
-  async deleteDeck(id: number) {
+  async deleteDeck(id: number): Promise<void> {
     await query('DELETE FROM wordpairs WHERE deck_id = $1', [id]);
     await query('DELETE FROM decks WHERE id = $1', [id]);
   }
+
+  // Additional methods for GenerateDeck and RefineDeck can be added here if needed
 } 

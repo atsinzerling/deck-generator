@@ -1,9 +1,24 @@
 import { Deck, WordPair } from "./deck";
+import * as Endpoints from "./endpoints";
 
 export interface APIError {
   message: string;
   status: number;
 }
+
+// Re-export endpoint types for easier imports
+export type {
+  Endpoints.GenerateDeckRequest,
+  Endpoints.GenerateDeckResponse,
+  Endpoints.RefineDeckRequest,
+  Endpoints.RefineDeckResponse,
+  Endpoints.GetAllDecksResponse,
+  Endpoints.GetDeckWordpairsResponse,
+  Endpoints.CreateDeckRequest,
+  Endpoints.CreateDeckResponse,
+  Endpoints.UpdateDeckRequest,
+  Endpoints.UpdateDeckResponse,
+};
 
 export interface GenerateRequest {
   prompt: string;

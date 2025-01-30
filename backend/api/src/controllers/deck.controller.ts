@@ -2,10 +2,21 @@ import { Request, Response } from 'express';
 import { DeckService } from '../services/deck.service';
 import { LLMProvider } from '../services/llm/types';
 import { GENERATE_SYSTEM_PROMPT, REFINE_SYSTEM_PROMPT } from '../config/prompts';
-import { GenerateResponse } from '../types/deck';
 import { APIError } from '../types/api';
 import { BadRequestError, NotFoundError } from '../errors';
 import logger from '../utils/logger';
+import {
+  GenerateDeckRequest,
+  GenerateDeckResponse,
+  RefineDeckRequest,
+  RefineDeckResponse,
+  GetAllDecksResponse,
+  GetDeckWordpairsResponse,
+  CreateDeckRequest,
+  CreateDeckResponse,
+  UpdateDeckRequest,
+  UpdateDeckResponse
+} from '../types/endpoints';
 
 export class DeckController {
   constructor(
@@ -21,7 +32,7 @@ export class DeckController {
     res.status(apiError.status).json({ error: apiError.message });
   }
 
-  async generateDeck(req: Request, res: Response) {
+  async generateDeck(req: Request<{}, {}, GenerateDeckRequest>, res: Response<GenerateDeckResponse | APIError>) {
     try {
       const { prompt } = req.body;
       if (!prompt) {
@@ -36,9 +47,9 @@ export class DeckController {
         GENERATE_SYSTEM_PROMPT,
         llmPrompt
       );
-      const deck: GenerateResponse = JSON.parse(result);
+      const deck: GenerateDeckResponse = JSON.parse(result);
       
-      logger.info(`Deck generated successfully: ${deck.deck_name}`);
+      logger.info(`Deck generated successfully: ${deck.name}`);
       logger.debug(`LLM Response: ${result}`); // Detailed response
       
       res.json(deck);
@@ -48,7 +59,7 @@ export class DeckController {
     }
   }
 
-  async refineDeck(req: Request, res: Response) {
+  async refineDeck(req: Request<{}, {}, RefineDeckRequest>, res: Response<RefineDeckResponse | APIError>) {
     try {
       const { prompt, history, current_deck } = req.body;
       if (!prompt || !history || !current_deck) {
@@ -60,9 +71,9 @@ export class DeckController {
       logger.debug(`LLM Refinement Prompt: ${userPrompt}`); // Detailed prompt
 
       const result = await this.llmProvider.generateCompletion(REFINE_SYSTEM_PROMPT, userPrompt);
-      const refinedDeck: GenerateResponse = JSON.parse(result);
+      const refinedDeck: RefineDeckResponse = JSON.parse(result);
       
-      logger.info(`Deck refined successfully: ${refinedDeck.deck_name}`);
+      logger.info(`Deck refined successfully: ${refinedDeck.name}`);
       logger.debug(`LLM Refinement Response: ${result}`); // Detailed response
       
       res.json(refinedDeck);
@@ -73,7 +84,8 @@ export class DeckController {
   }
 
   // CRUD operations
-  async getAllDecks(req: Request, res: Response) {
+
+  async getAllDecks(req: Request, res: Response<GetAllDecksResponse[] | APIError>) {
     try {
       logger.info('Fetching all decks');
       const decks = await this.deckService.getAllDecks();
@@ -84,7 +96,7 @@ export class DeckController {
     }
   }
 
-  async getDeckWordpairs(req: Request, res: Response) {
+  async getDeckWordpairs(req: Request<{ deckId: string }, {}, {}>, res: Response<GetDeckWordpairsResponse[] | APIError>) {
     try {
       const deckId = parseInt(req.params.deckId);
       if (isNaN(deckId)) {
@@ -102,7 +114,7 @@ export class DeckController {
     }
   }
 
-  async createDeck(req: Request, res: Response) {
+  async createDeck(req: Request<{}, {}, CreateDeckRequest>, res: Response<CreateDeckResponse | APIError>) {
     try {
       const { name, language_from, language_to, wordpairs } = req.body;
       logger.info(`Creating new deck: ${name}, from ${language_from} to ${language_to}`);
@@ -117,9 +129,19 @@ export class DeckController {
     }
   }
 
-  async updateDeck(req: Request, res: Response) {
+  async updateDeck(req: Request<{ deckId: string }, {}, UpdateDeckRequest>, res: Response<UpdateDeckResponse | APIError>) {
     try {
+      const deckId = parseInt(req.params.deckId);
+      if (isNaN(deckId)) {
+        throw new BadRequestError('Invalid deckId');
+      }
+
       const { id, name, language_from, language_to, wordpairs } = req.body;
+
+      if (id !== deckId) {
+        throw new BadRequestError('deckId in URL and body do not match');
+      }
+
       logger.info(`Updating deck ID: ${id} with name: ${name}`);
       
       const deck = await this.deckService.updateDeck(req.body);
@@ -132,7 +154,7 @@ export class DeckController {
     }
   }
 
-  async deleteDeck(req: Request, res: Response) {
+  async deleteDeck(req: Request<{ deckId: string }, {}, {}>, res: Response<void | APIError>) {
     try {
       const deckId = parseInt(req.params.deckId);
       if (isNaN(deckId)) {

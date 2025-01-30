@@ -8,11 +8,11 @@ export interface Deck {
   name: string;
   language_from: string;
   language_to: string;
-  deck?: WordPair[];
+  wordpairs?: WordPair[];
 }
 
 export interface GenerateResponse {
-  deck_name: string;
+  name: string;
   language_from: string;
   language_to: string;
   deck: WordPair[];
