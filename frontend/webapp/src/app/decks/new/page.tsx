@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { api } from "@/lib/api";
-import { ShortWordPair, GenerateDeckPayload, RefineDeckPayload, DeckWithWordPairs } from "@/types/decks";
+import { ShortWordPair} from "@/types/decks";
+import { GenerateDeckRequest, RefineDeckRequest } from "@/types/api";
 
 const NewDeck: React.FC = () => {
   const [fromLanguage, setFromLanguage] = useState("");
@@ -22,7 +23,7 @@ const NewDeck: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const payload: GenerateDeckPayload = {
+    const payload: GenerateDeckRequest = {
       prompt: `Create a deck from ${fromLanguage} to ${toLanguage} with ${pairCount} word pairs on the topic/theme of ${theme}.`
     };
 
@@ -30,6 +31,8 @@ const NewDeck: React.FC = () => {
     if (apiError) {
       setError(apiError);
     } else if (data) {
+		console.log(data);
+		console.log(data.wordpairs);
       setWordPairs(data.wordpairs);
       setIsRefining(true);
     }
@@ -40,7 +43,7 @@ const NewDeck: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const payload: RefineDeckPayload = {
+    const payload: RefineDeckRequest = {
       prompt: additionalPrompt,
       history: [],
       current_deck: ({

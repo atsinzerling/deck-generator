@@ -1,12 +1,16 @@
-import {
-  Deck,
-  WordPair,
-  CreateDeckPayload,
-  UpdateDeckPayload,
-  GenerateDeckPayload,
-  RefineDeckPayload,
-  DeckWithWordPairs,
-} from "@/types/decks";
+import { 
+	CreateDeckRequest,
+	CreateDeckResponse,
+	UpdateDeckRequest,
+	UpdateDeckResponse,
+	GetAllDecksResponse,
+	GetDeckWordpairsResponse,
+	GetDeckByIdResponse,
+	GenerateDeckRequest,
+	GenerateDeckResponse,
+	RefineDeckRequest,
+	RefineDeckResponse
+  } from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -39,25 +43,25 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<A
 // Deck-related API functions
 export const api = {
   decks: {
-    getAll: () => apiRequest<Deck[]>('/api/decks'),
-    getById: (deckId: string) => apiRequest<Deck>(`/api/decks/${deckId}`),
-    getWordPairs: (deckId: string) => apiRequest<WordPair[]>(`/api/decks/${deckId}/wordpairs`),
-    create: (deck: CreateDeckPayload) => apiRequest<Deck>('/api/decks', {
+    getAll: () => apiRequest<GetAllDecksResponse[]>('/api/decks'),
+    getById: (deckId: string) => apiRequest<GetDeckByIdResponse>(`/api/decks/${deckId}`),
+    getWordPairs: (deckId: string) => apiRequest<GetDeckWordpairsResponse[]>(`/api/decks/${deckId}/wordpairs`),
+    create: (deck: CreateDeckRequest) => apiRequest<CreateDeckResponse>('/api/decks', {
       method: 'POST',
       body: JSON.stringify(deck),
     }),
-    update: (deckId: string, deck: UpdateDeckPayload) => apiRequest<Deck>(`/api/decks/${deckId}`, {
+    update: (deckId: string, deck: UpdateDeckRequest) => apiRequest<UpdateDeckResponse>(`/api/decks/${deckId}`, {
       method: 'PUT',
       body: JSON.stringify(deck),
     }),
     delete: (deckId: string) => apiRequest<void>(`/api/decks/${deckId}`, {
       method: 'DELETE',
     }),
-    generate: (prompt: GenerateDeckPayload) => apiRequest<DeckWithWordPairs>('/api/decks/generate', {
+    generate: (prompt: GenerateDeckRequest) => apiRequest<GenerateDeckResponse>('/api/decks/generate', {
       method: 'POST',
       body: JSON.stringify(prompt),
     }),
-    refine: (prompt: RefineDeckPayload) => apiRequest<DeckWithWordPairs>('/api/decks/refine', {
+    refine: (prompt: RefineDeckRequest) => apiRequest<RefineDeckResponse>('/api/decks/refine', {
       method: 'POST',
       body: JSON.stringify(prompt),
     }),

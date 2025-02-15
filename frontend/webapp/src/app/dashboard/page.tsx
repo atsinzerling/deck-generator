@@ -5,6 +5,8 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Deck } from "@/types/decks";
+import NewDeckTile from "@/components/NewDeckTile";
+import SkeletonDashboard from "@/components/SkeletonDashboard";
 
 const Dashboard: React.FC = () => {
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -34,19 +36,18 @@ const Dashboard: React.FC = () => {
     return <div className="p-8 text-red-500">Error: {error}</div>;
   }
 
+
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Your Decks</h1>
-      {loading ? (
-        <LoadingSpinner />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <div
-            onClick={handleNewDeck}
-            className="cursor-pointer flex items-center justify-center bg-blue-500 text-white rounded-lg p-4 hover:bg-blue-600 transition-colors"
-          >
-            + New Deck
-          </div>
+    <div className="min-h-screen w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">My Language Decks</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading ? (
+            <SkeletonDashboard />
+          ) : (
+            <>
+              <NewDeckTile onClick={handleNewDeck} />
+              
           {decks.map((deck) => (
             <DeckTile
               key={deck.id}
@@ -54,11 +55,15 @@ const Dashboard: React.FC = () => {
               name={deck.name}
               languageFrom={deck.language_from}
               languageTo={deck.language_to}
+              cardCount={deck.wordpair_count || 0}
+              lastModified={deck.last_modified}
               onClick={() => router.push(`/decks/${deck.id}`)}
-            />
-          ))}
+                />
+              ))}
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
