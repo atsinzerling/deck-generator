@@ -4,6 +4,7 @@ export interface WordPair {
   word_original: string;
   word_translation: string;
   created_at: string;
+  last_modified: string;
 }
 
 export interface ShortWordPair {
@@ -17,11 +18,10 @@ export interface Deck {
   language_from: string;
   language_to: string;
   created_at: string;
+  last_modified: string;
+  wordpair_count: number;
 }
 
-export interface DeckWithWordPairs{
-	name: string;
-	language_from: string;
-	language_to: string;
+export interface DeckWithWordPairs extends Deck {
 	wordpairs: ShortWordPair[];
 }

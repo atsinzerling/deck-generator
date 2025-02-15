@@ -1,5 +1,4 @@
 import { query } from '../db';
-import { WordPair, Deck } from '../types/deck';
 import { 
   CreateDeckRequest,
   CreateDeckResponse,
@@ -7,11 +6,7 @@ import {
   UpdateDeckResponse,
   GetAllDecksResponse,
   GetDeckWordpairsResponse,
-  GetDeckByIdResponse,
-  GenerateDeckRequest,
-  GenerateDeckResponse,
-  RefineDeckRequest,
-  RefineDeckResponse
+  GetDeckByIdResponse
 } from '../types/api';
 import { NotFoundError } from '../errors/NotFoundError';
 
@@ -19,7 +14,13 @@ export class DeckService {
   constructor() {}
 
   async getAllDecks(): Promise<GetAllDecksResponse[]> {
-    const result = await query('SELECT * FROM decks ORDER BY created_at DESC');
+    const result = await query(`
+      SELECT d.*, COUNT(w.id)::int as wordpair_count 
+      FROM decks d 
+      LEFT JOIN wordpairs w ON d.id = w.deck_id 
+      GROUP BY d.id 
+      ORDER BY d.last_modified DESC`
+    );
     if (result.rows.length === 0) {
       throw new NotFoundError('No decks found');
     }
@@ -27,7 +28,14 @@ export class DeckService {
   }
 
   async getDeckById(deckId: number): Promise<GetDeckByIdResponse> {
-    const result = await query('SELECT * FROM decks WHERE id = $1', [deckId]);
+    const result = await query(`
+      SELECT d.*, COUNT(w.id)::int as wordpair_count 
+      FROM decks d 
+      LEFT JOIN wordpairs w ON d.id = w.deck_id 
+      WHERE d.id = $1 
+      GROUP BY d.id`, 
+      [deckId]
+    );
     return result.rows[0];
   }
 

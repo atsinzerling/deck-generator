@@ -6,7 +6,7 @@ async function main() {
     const deckResult = await query(`
       INSERT INTO decks (name, language_from, language_to)
       VALUES ($1, $2, $3)
-      RETURNING id
+      RETURNING id, name, language_from, language_to, created_at, last_modified
     `, ['Basic Greetings', 'English', 'Spanish']);
 
     const deckId = deckResult.rows[0].id;
