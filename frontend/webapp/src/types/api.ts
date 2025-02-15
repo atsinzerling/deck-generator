@@ -1,12 +1,12 @@
-import { Deck, WordPair, DeckWithWordPairs} from "./decks";
+import { Deck, WordPair, ShortDeckWithWordPairs} from "./decks";
 
-export interface CreateDeckRequest extends DeckWithWordPairs {
+export interface CreateDeckRequest extends ShortDeckWithWordPairs {
 }
 
 export interface CreateDeckResponse extends Deck {
 }
 
-export interface UpdateDeckRequest extends DeckWithWordPairs {
+export interface UpdateDeckRequest extends ShortDeckWithWordPairs {
   id: string;
 }
 
@@ -34,14 +34,14 @@ export interface GenerateDeckRequest {
   prompt: string;
 }
 
-export interface GenerateDeckResponse extends DeckWithWordPairs {
+export interface GenerateDeckResponse extends ShortDeckWithWordPairs {
 }
 
 export interface RefineDeckRequest {
   prompt: string;
   history: string[];
-  current_deck: DeckWithWordPairs;
+  current_deck: ShortDeckWithWordPairs;
 } 
 
-export interface RefineDeckResponse extends DeckWithWordPairs {
+export interface RefineDeckResponse extends ShortDeckWithWordPairs {
 }

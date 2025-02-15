@@ -22,6 +22,12 @@ export interface Deck {
   wordpair_count: number;
 }
 
-export interface DeckWithWordPairs extends Deck {
+export interface ShortDeck {
+  name: string;
+  language_from: string;
+  language_to: string;
+}
+
+export interface ShortDeckWithWordPairs extends ShortDeck {
 	wordpairs: ShortWordPair[];
 }

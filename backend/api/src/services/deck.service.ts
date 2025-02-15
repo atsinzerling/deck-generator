@@ -57,6 +57,11 @@ export class DeckService {
     );
 
     const deck: CreateDeckResponse = result.rows[0];
+    const wordpairCountResult = await query(
+      'SELECT COUNT(id)::int as wordpair_count FROM wordpairs WHERE deck_id = $1',
+      [deck.id]
+    );
+    deck.wordpair_count = wordpairCountResult.rows[0].wordpair_count;
     
     const insertWordPairText = 'INSERT INTO wordpairs (deck_id, word_original, word_translation) VALUES ($1, $2, $3)';
     for (const pair of wordpairs) {

@@ -1,12 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import DeckTile from "@/components/DeckTile";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import DeckTile from "@/components/dashboard/DeckTile";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Deck } from "@/types/decks";
-import NewDeckTile from "@/components/NewDeckTile";
-import SkeletonDashboard from "@/components/SkeletonDashboard";
+import NewDeckTile from "@/components/dashboard/NewDeckTile";
+import SkeletonDashboard from "@/components/dashboard/SkeletonDashboard";
 
 const Dashboard: React.FC = () => {
   const [decks, setDecks] = useState<Deck[]>([]);
