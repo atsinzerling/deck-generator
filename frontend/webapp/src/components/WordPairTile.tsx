@@ -1,24 +1,20 @@
 import React from 'react';
 import { Card } from "@/components/ui/Card";
-
-interface WordPair {
-  word_original: string;
-  word_translation: string;
-}
+import { ShortWordPair } from "@/types/decks";
 
 interface WordPairTileProps {
-  pair: WordPair;
+  pair: ShortWordPair;
 }
 
 const WordPairTile: React.FC<WordPairTileProps> = ({ pair }) => {
   return (
-    <div className="flex space-x-4">
-      <Card className="w-1/2 p-4 bg-[#2f2f2f] rounded-lg shadow-lg text-gray-200">
+    <div className="flex gap-4">
+      <div className="w-1/2 bg-[#2f2f2f] p-4 rounded-lg">
         {pair.word_original}
-      </Card>
-      <Card className="w-1/2 p-4 bg-[#242424] rounded-lg shadow-lg text-gray-200">
+      </div>
+      <div className="w-1/2 bg-[#363636] p-4 rounded-lg">
         {pair.word_translation}
-      </Card>
+      </div>
     </div>
   );
 };
