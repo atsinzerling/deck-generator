@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import { DeckService } from '../services/deck.service';
 import { LLMProvider } from '../services/llm/types';
 import { GENERATE_SYSTEM_PROMPT, REFINE_SYSTEM_PROMPT } from '../config/prompts';
-import { APIError, GenerateDeckResponse, RefineDeckResponse } from '../types/api';
+import { GenerateDeckResponse, RefineDeckResponse } from '../types/api';
 import { BadRequestError, NotFoundError, InternalServerError } from '../errors';
 import logger from '../utils/logger';
+import { parseLlmResponse } from '../utils/llm';
 
 export class DeckController {
   constructor(
@@ -28,7 +29,7 @@ export class DeckController {
         GENERATE_SYSTEM_PROMPT,
         llmPrompt
       );
-      const deck : GenerateDeckResponse = JSON.parse(result);
+      const deck : GenerateDeckResponse = parseLlmResponse(result);
       
       logger.info(`Deck generated successfully: ${deck.name}`);
       logger.debug(`LLM Response: ${result}`); // Detailed response

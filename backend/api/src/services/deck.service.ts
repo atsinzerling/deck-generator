@@ -21,7 +21,7 @@ export class DeckService {
       GROUP BY d.id 
       ORDER BY d.last_modified DESC`
     );
-    // await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 500));
     if (result.rows.length === 0) {
       throw new NotFoundError('No decks found');
     }
