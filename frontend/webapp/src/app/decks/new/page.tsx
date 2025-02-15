@@ -215,39 +215,39 @@ const NewDeck: React.FC = () => {
                 />
               </div>
 
-              <Button
-                onClick={isRefining ? handleRefine : handleGenerate}
-                disabled={loading}
-                className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white"
-              >
-                {isRefining ? "Refine Word Pairs" : "Generate Word Pairs"}
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  onClick={isRefining ? handleRefine : handleGenerate}
+                  disabled={loading}
+                  className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white"
+                >
+                  {isRefining ? "Refine Word Pairs" : "Generate Word Pairs"}
+                </Button>
 
-              {wordPairs.length > 0 && (
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    onClick={handleSave}
-                    disabled={loading}
-                    variant="secondary"
-                    className="w-1/2 bg-green-600 hover:bg-green-700"
-                  >
-                    Save Deck
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setWordPairs([]);
-                      setIsRefining(false);
-                    }}
-                    disabled={loading}
-                    variant="destructive"
-                    className="w-1/2"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-              
-              {loading && <LoadingSpinner />}
+                {wordPairs.length > 0 && (
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={handleSave}
+                      disabled={loading}
+                      variant="secondary"
+                      className="w-1/2 bg-green-600 hover:bg-green-700"
+                    >
+                      Save Deck
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setWordPairs([]);
+                        setIsRefining(false);
+                      }}
+                      disabled={loading}
+                      variant="destructive"
+                      className="w-1/2"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

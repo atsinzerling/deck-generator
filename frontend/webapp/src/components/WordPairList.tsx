@@ -15,7 +15,7 @@ const WordPairList: React.FC<WordPairListProps> = ({
   isRefining = false
 }) => {
   return (
-    <div className="h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh+1.5rem)]">
+    <div className="h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
       <h2 className="text-2xl font-bold mb-8">{title}</h2>
       <div className="flex-1 min-h-0">
         <ScrollArea className="h-full">
