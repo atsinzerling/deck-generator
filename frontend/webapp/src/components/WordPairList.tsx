@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import WordPairTile from "@/components/WordPairTile";
 import { ShortWordPair } from "@/types/decks";
+import WordPairPlaceholder from "@/components/WordPairPlaceholder";
 
 interface WordPairListProps {
   wordPairs: ShortWordPair[];
@@ -10,13 +11,19 @@ interface WordPairListProps {
 }
 
 const WordPairList: React.FC<WordPairListProps> = ({ 
-  wordPairs, 
-  title = "Generated Word Pairs",
-  isRefining = false
+  wordPairs
 }) => {
+  if (wordPairs.length === 0) {
+    return (
+      <div className="h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
+        <WordPairPlaceholder />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
-      <h2 className="text-2xl font-bold mb-8">{title}</h2>
+      {/* <h2 className="text-2xl font-bold mb-8">{title}</h2> */}
       <div className="flex-1 min-h-0">
         <ScrollArea className="h-full">
           <div className="space-y-4 pr-4">
