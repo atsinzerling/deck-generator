@@ -252,7 +252,10 @@ const NewDeck: React.FC = () => {
           </div>
 
           <div className="w-full md:w-1/2">
-            <WordPairList wordPairs={wordPairs} isRefining={isRefining} />
+            <WordPairList 
+              wordPairs={wordPairs}
+              loading={loading}
+            />
           </div>
         </div>
       </div>

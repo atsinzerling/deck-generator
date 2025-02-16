@@ -19,8 +19,8 @@ async function main() {
         name TEXT NOT NULL,
         language_from TEXT NOT NULL,
         language_to TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS wordpairs (
@@ -28,8 +28,8 @@ async function main() {
         deck_id INTEGER NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
         word_original TEXT NOT NULL,
         word_translation TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
       -- Create triggers to automatically update last_modified
