@@ -10,7 +10,7 @@ const NewDeckTile: React.FC<NewDeckTileProps> = ({ onClick }) => {
   return (
     <div
       onClick={onClick}
-      className="bg-[#242424] rounded-xl p-6 cursor-pointer hover:bg-[#2f2f2f] transition-colors duration-200 border-2 border-dashed border-[#4f46e5] flex flex-col items-center justify-center min-h-[200px]"
+      className="bg-[#242424] rounded-xl p-4 cursor-pointer hover:bg-[#2f2f2f] transition-colors duration-200 border-2 border-dashed border-[#4f46e5] flex flex-col items-center justify-center min-h-[11rem] h-full"
     >
       <FontAwesomeIcon 
         icon={faPlus} 

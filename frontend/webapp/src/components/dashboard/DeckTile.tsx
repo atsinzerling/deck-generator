@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
-import { formatRelativeDate } from "@/lib/utils";
+import { formatRelativeDate } from "@/lib/dates";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, faExchangeAlt, faLayerGroup, faClock } from '@fortawesome/free-solid-svg-icons';
 

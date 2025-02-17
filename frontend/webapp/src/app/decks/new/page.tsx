@@ -9,6 +9,11 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import WordPairList from "@/components/WordPairList";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { 
+  faSync,
+  faMagicWandSparkles
+} from "@fortawesome/free-solid-svg-icons";
 
 const NewDeck: React.FC = () => {
   const [fromLanguage, setFromLanguage] = useState("");
@@ -169,8 +174,11 @@ const NewDeck: React.FC = () => {
                     type="number"
                     name="pairCount"
                     placeholder="e.g., 20"
-                    value={pairCount}
-                    onChange={(e) => setPairCount(Number(e.target.value))}
+                    value={pairCount || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPairCount(val === '' ? 0 : parseInt(val, 10));
+                    }}
                     disabled={isRefining}
                     className="bg-[#1a1a1a] border-gray-600"
                   />
@@ -219,8 +227,12 @@ const NewDeck: React.FC = () => {
                 <Button
                   onClick={isRefining ? handleRefine : handleGenerate}
                   disabled={loading}
-                  className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white"
                 >
+                  <FontAwesomeIcon 
+                    icon={isRefining ? faSync : faMagicWandSparkles} 
+                    className="h-4 w-4" 
+                  />
                   {isRefining ? "Refine Word Pairs" : "Generate Word Pairs"}
                 </Button>
 
@@ -229,10 +241,9 @@ const NewDeck: React.FC = () => {
                     <Button
                       onClick={handleSave}
                       disabled={loading}
-                      variant="secondary"
-                      className="w-1/2 bg-green-600 hover:bg-green-700"
+                      className="w-1/2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                     >
-                      Save Deck
+                      Save Changes
                     </Button>
                     <Button
                       onClick={() => {
@@ -240,8 +251,7 @@ const NewDeck: React.FC = () => {
                         setIsRefining(false);
                       }}
                       disabled={loading}
-                      variant="destructive"
-                      className="w-1/2"
+                      className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"
                     >
                       Cancel
                     </Button>
