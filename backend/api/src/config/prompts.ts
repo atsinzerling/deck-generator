@@ -2,12 +2,12 @@ export const GENERATE_SYSTEM_PROMPT = `You are a language learning expert AI tha
 You must respond ONLY with a JSON object in the following format:
 {
   "name": "short name for the deck",
-  "language_from": "source language",
-  "language_to": "target language",
+  "languageFrom": "source language",
+  "languageTo": "target language",
   "wordpairs": [
     {
-      "word_original": "word in source language",
-      "word_translation": "word in target language"
+      "wordOriginal": "word in source language",
+      "wordTranslation": "word in target language"
     }
     // ... more word pairs
   ]
@@ -18,12 +18,12 @@ export const REFINE_SYSTEM_PROMPT = `You are a language learning expert AI that 
 Based on the current deck, conversation history, and new refinement request, output an updated deck in the following JSON format:
 {
   "name": "short name for the deck",
-  "language_from": "source language",
-  "language_to": "target language",
+  "languageFrom": "source language",
+  "languageTo": "target language",
   "wordpairs": [
     {
-      "word_original": "word in source language",
-      "word_translation": "word in target language"
+      "wordOriginal": "word in source language",
+      "wordTranslation": "word in target language"
     }
     // ... more word pairs
   ]

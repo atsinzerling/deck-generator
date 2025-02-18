@@ -1,4 +1,8 @@
-import { query } from '../db';
+import { sql, eq, asc, desc } from 'drizzle-orm';
+import { db } from '../drizzle/client';
+// Import your table schemas – adjust the import path based on your project structure.
+import { decks, wordpairs } from '../drizzle/schema';
+
 import { 
   CreateDeckRequest,
   CreateDeckResponse,
@@ -14,84 +18,128 @@ export class DeckService {
   constructor() {}
 
   async getAllDecks(): Promise<GetAllDecksResponse[]> {
-    const result = await query(`
-      SELECT d.*, COUNT(w.id)::int as wordpair_count 
-      FROM decks d 
-      LEFT JOIN wordpairs w ON d.id = w.deck_id 
-      GROUP BY d.id 
-      ORDER BY d.last_modified DESC`
-    );
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return result.rows;
+    const decksWithCount = await db
+      .select({
+        id: decks.id,
+        name: decks.name,
+        languageFrom: decks.languageFrom,
+        languageTo: decks.languageTo,
+        lastModified: decks.lastModified,
+        createdAt: decks.createdAt,
+        // Use a raw SQL snippet to calculate the count of wordpairs
+        wordpairCount: sql<number>`COUNT(${wordpairs.id})`
+      })
+      .from(decks)
+      .leftJoin(wordpairs, eq(wordpairs.deckId, decks.id))
+      .groupBy(decks.id)
+      .orderBy(desc(decks.lastModified));
+
+    return decksWithCount;
   }
 
   async getDeckById(deckId: number): Promise<GetDeckByIdResponse> {
-    const result = await query(`
-      SELECT d.*, COUNT(w.id)::int as wordpair_count 
-      FROM decks d 
-      LEFT JOIN wordpairs w ON d.id = w.deck_id 
-      WHERE d.id = $1 
-      GROUP BY d.id`, 
-      [deckId]
-    );
-    return result.rows[0];
+    const deckData = await db
+      .select({
+        id: decks.id,
+        name: decks.name,
+        languageFrom: decks.languageFrom,
+        languageTo: decks.languageTo,
+        createdAt: decks.createdAt,
+        lastModified: decks.lastModified,
+        wordpairCount: sql<number>`COUNT(${wordpairs.id})`
+      })
+      .from(decks)
+      .leftJoin(wordpairs, eq(wordpairs.deckId, decks.id))
+      .where(eq(decks.id, deckId))
+      .groupBy(decks.id);
+
+    if (!deckData[0]) {
+      throw new NotFoundError(`Deck with id ${deckId} not found`);
+    }
+    return deckData[0];
   }
 
   async getDeckWordpairs(deckId: number): Promise<GetDeckWordpairsResponse[]> {
-    const result = await query(
-      'SELECT * FROM wordpairs WHERE deck_id = $1 ORDER BY created_at ASC',
-      [deckId]
-    );
-    return result.rows;
+    const wordPairs = await db
+      .select()
+      .from(wordpairs)
+      .where(eq(wordpairs.deckId, deckId))
+      .orderBy(asc(wordpairs.createdAt));
+
+    return wordPairs;
   }
 
   async createDeck(request: CreateDeckRequest): Promise<CreateDeckResponse> {
-    const { name, language_from, language_to, wordpairs } = request;
+    const { name, languageFrom, languageTo, wordpairs: pairs } = request;
     
-    const result = await query(
-      'INSERT INTO decks (name, language_from, language_to) VALUES ($1, $2, $3) RETURNING id, name, language_from, language_to',
-      [name, language_from, language_to]
-    );
+    // Insert a new deck and return the inserted row
+    const insertedDeck = await db
+      .insert(decks)
+      .values({ name, languageFrom, languageTo })
+      .returning();
 
-    const deck: CreateDeckResponse = result.rows[0];
-    const wordpairCountResult = await query(
-      'SELECT COUNT(id)::int as wordpair_count FROM wordpairs WHERE deck_id = $1',
-      [deck.id]
-    );
-    deck.wordpair_count = wordpairCountResult.rows[0].wordpair_count;
-    
-    const insertWordPairText = 'INSERT INTO wordpairs (deck_id, word_original, word_translation) VALUES ($1, $2, $3)';
-    for (const pair of wordpairs) {
-      await query(insertWordPairText, [deck.id, pair.word_original, pair.word_translation]);
+    if (!insertedDeck[0]) {
+      throw new Error('Failed to create deck.');
     }
 
-    return deck;
+    const deck = insertedDeck[0];
+
+    // Insert each wordpair for the new deck
+    for (const pair of pairs) {
+      await db.insert(wordpairs).values({
+        deckId: deck.id,
+        wordOriginal: pair.wordOriginal,
+        wordTranslation: pair.wordTranslation,
+      });
+    }
+
+    // Since the wordpairs were just inserted, the count is equal to the length of the pairs array.
+    const deckWithCount: CreateDeckResponse = {
+      ...deck,
+      wordpairCount: pairs.length,
+    };  
+    
+    return deckWithCount;
   }
 
   async updateDeck(request: UpdateDeckRequest): Promise<UpdateDeckResponse> {
-    const { id, name, language_from, language_to, wordpairs } = request;
+    const { id, name, languageFrom, languageTo, wordpairs: pairs } = request;
     
-    const result = await query(
-      'UPDATE decks SET name = $1, language_from = $2, language_to = $3 WHERE id = $4 RETURNING id, name, language_from, language_to, created_at',
-      [name, language_from, language_to, id]
-    );
+    const updatedDeckRows = await db
+      .update(decks)
+      .set({ name, languageFrom, languageTo } )
+      .where(eq(decks.id, id))
+      .returning();
 
-    const updatedDeck: UpdateDeckResponse = result.rows[0];
-
-    await query('DELETE FROM wordpairs WHERE deck_id = $1', [id]);
-
-    const insertWordPairText = 'INSERT INTO wordpairs (deck_id, word_original, word_translation) VALUES ($1, $2, $3)';
-    for (const pair of wordpairs) {
-      await query(insertWordPairText, [id, pair.word_original, pair.word_translation]);
-      //TODO: handle failed inserts
+    if (!updatedDeckRows[0]) {
+      throw new NotFoundError(`Deck with id ${id} not found`);
     }
+    const updatedDeck = updatedDeckRows[0];
 
-    return updatedDeck;
+    // Remove all existing wordpairs for this deck
+    await db.delete(wordpairs).where(eq(wordpairs.deckId, id));
+
+    // Insert new wordpairs for the deck. (Consider adding error handling if needed.)
+    for (const pair of pairs) {
+      await db.insert(wordpairs).values({
+        deckId: id,
+        wordOriginal: pair.wordOriginal,
+        wordTranslation: pair.wordTranslation,
+      });
+    }
+    const deckWithCount: UpdateDeckResponse = {
+      ...updatedDeck,
+      wordpairCount: pairs.length,
+    };  
+
+    return deckWithCount;
   }
 
   async deleteDeck(id: number): Promise<void> {
-    await query('DELETE FROM wordpairs WHERE deck_id = $1', [id]);
-    await query('DELETE FROM decks WHERE id = $1', [id]);
+    // Delete wordpairs associated with the deck
+    await db.delete(wordpairs).where(eq(wordpairs.deckId, id));
+    // Then, delete the deck itself
+    await db.delete(decks).where(eq(decks.id, id));
   }
 
   // Additional methods for GenerateDeck and RefineDeck can be added here if needed

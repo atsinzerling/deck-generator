@@ -1,31 +1,31 @@
 export interface WordPair {
-  id: string;
-  deck_id: string;
-  word_original: string;
-  word_translation: string;
-  created_at: string;
-  last_modified: string;
+  id: number;
+  deckId: number;
+  wordOriginal: string;
+  wordTranslation: string;
+  createdAt: string;
+  lastModified: string;
 }
 
 export interface ShortWordPair {
-  word_original: string;
-  word_translation: string;
+  wordOriginal: string;
+  wordTranslation: string;
 }
 
 export interface Deck {
-  id: string;
+  id: number;
   name: string;
-  language_from: string;
-  language_to: string;
-  created_at: string;
-  last_modified: string;
-  wordpair_count: number;
+  languageFrom: string;
+  languageTo: string;
+  createdAt: string;
+  lastModified: string;
+  wordpairCount: number;
 }
 
 export interface ShortDeck {
   name: string;
-  language_from: string;
-  language_to: string;
+  languageFrom: string;
+  languageTo: string;
 }
 
 export interface ShortDeckWithWordPairs extends ShortDeck {

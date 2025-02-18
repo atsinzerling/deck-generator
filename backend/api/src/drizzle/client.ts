@@ -1,5 +1,7 @@
 import { Pool } from 'pg';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'; // import 'dotenv/config';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { getDbConnectionString } from '../utils/database';
 
 dotenv.config();
 
@@ -11,9 +13,8 @@ const pool = new Pool({
     database: process.env.PG_DATABASE,
 });
 
-export async function query(text: string, params?: any[]) {
-    return pool.query(text, params);
-}
+// Initialize drizzle using the pool instance
+export const db = drizzle(pool);
 
 export async function closeDB() {
     await pool.end();

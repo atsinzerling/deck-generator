@@ -39,35 +39,35 @@ const GenerateDeckRequestSchema = z.object({
 const RefineDeckRequestSchema = z.object({
   prompt: z.string().min(1, { message: "Prompt is required" }),
   history: z.array(z.string()),
-  current_deck: z.object({
+  currentDeck: z.object({
     name: z.string().min(1),
-    language_from: z.string().min(1),
-    language_to: z.string().min(1),
+    languageFrom: z.string().min(1),
+    languageTo: z.string().min(1),
     wordpairs: z.array(z.object({
-      word_original: z.string(),
-      word_translation: z.string()
+      wordOriginal: z.string(),
+      wordTranslation: z.string()
     }))
   })
 });
 
 const CreateDeckRequestSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  language_from: z.string().min(1, { message: "language_from is required" }),
-  language_to: z.string().min(1, { message: "language_to is required" }),
+  languageFrom: z.string().min(1, { message: "languageFrom is required" }),
+  languageTo: z.string().min(1, { message: "languageTo is required" }),
   wordpairs: z.array(z.object({
-    word_original: z.string(),
-    word_translation: z.string()
+    wordOriginal: z.string(),
+    wordTranslation: z.string()
   }))
 });
 
 const UpdateDeckRequestSchema = z.object({
-  id: z.string().min(1, { message: "ID is required" }),
+  id: z.number().min(1, { message: "ID is required" }),
   name: z.string().min(1, { message: "Name is required" }),
-  language_from: z.string().min(1, { message: "language_from is required" }),
-  language_to: z.string().min(1, { message: "language_to is required" }),
+  languageFrom: z.string().min(1, { message: "languageFrom is required" }),
+  languageTo: z.string().min(1, { message: "languageTo is required" }),
   wordpairs: z.array(z.object({
-    word_original: z.string(),
-    word_translation: z.string()
+    wordOriginal: z.string(),
+    wordTranslation: z.string()
   }))
 });
 
@@ -123,9 +123,9 @@ export class DeckController extends Controller {
   ): Promise<RefineDeckResponse> {
     try {
       const parsedRequest = RefineDeckRequestSchema.parse(request);
-      logger.info(`Refining deck ${parsedRequest.current_deck.name} with prompt: ${parsedRequest.prompt}`);
+      logger.info(`Refining deck ${parsedRequest.currentDeck.name} with prompt: ${parsedRequest.prompt}`);
       
-      const userPrompt = `Refine given deck given this data, conversation history and user refinement request. Current deck: ${JSON.stringify(parsedRequest.current_deck)}\n\nConversation history: ${JSON.stringify(parsedRequest.history)}\n\nRefinement request: ${parsedRequest.prompt}`;
+      const userPrompt = `Refine given deck given this data, conversation history and user refinement request. Current deck: ${JSON.stringify(parsedRequest.currentDeck)}\n\nConversation history: ${JSON.stringify(parsedRequest.history)}\n\nRefinement request: ${parsedRequest.prompt}`;
       logger.debug(`LLM Refinement Prompt: ${userPrompt}`);
 
       const result = await this.llmProvider.generateCompletion(REFINE_SYSTEM_PROMPT, userPrompt);
@@ -191,7 +191,7 @@ export class DeckController extends Controller {
   ): Promise<CreateDeckResponse> {
     try {
       const parsedRequest = CreateDeckRequestSchema.parse(request);
-      logger.info(`Creating new deck: ${parsedRequest.name} from ${parsedRequest.language_from} to ${parsedRequest.language_to}`);
+      logger.info(`Creating new deck: ${parsedRequest.name} from ${parsedRequest.languageFrom} to ${parsedRequest.languageTo}`);
       
       const deck = await this.deckService.createDeck(parsedRequest);
       if (!deck) {
@@ -211,7 +211,7 @@ export class DeckController extends Controller {
     @Body() request: UpdateDeckRequest
   ): Promise<UpdateDeckResponse> {
     try {
-      if (String(deckId) !== request.id) {
+      if (deckId !== request.id) {
         throw new BadRequestError("deckId in path does not match id in body");
       }
       const parsedRequest = UpdateDeckRequestSchema.parse(request);

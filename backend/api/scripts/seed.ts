@@ -1,36 +1,48 @@
-import { query, closeDB } from "../src/db";
+import { db, closeDB } from "../src/drizzle/client";
+import { decks, wordpairs } from "../src/drizzle/schema";
 
 async function main() {
   try {
-    // Sample deck
-    const deckResult = await query(`
-      INSERT INTO decks (name, language_from, language_to)
-      VALUES ($1, $2, $3)
-      RETURNING id, name, language_from, language_to, created_at, last_modified
-    `, ['Basic Greetings', 'English', 'Spanish']);
+    // Insert a sample deck using drizzle and get the inserted row(s)
+    const insertedDeck = await db
+      .insert(decks)
+      .values({
+        name: "Basic Greetings",
+        languageFrom: "English",
+        languageTo: "Spanish",
+      })
+      .returning();
 
-    const deckId = deckResult.rows[0].id;
+    if (!insertedDeck[0]) {
+      throw new Error("Failed to insert deck");
+    }
+    
+    const deckId = insertedDeck[0].id;
 
     // Sample word pairs
-    const samplePairs = [
-      ['Hello', 'Hola'],
-      ['Good morning', 'Buenos días'],
-      ['Good night', 'Buenas noches'],
-      ['Thank you', 'Gracias'],
+    const samplePairs: [string, string][] = [
+      ["Hello", "Hola"],
+      ["Good morning", "Buenos días"],
+      ["Good night", "Buenas noches"],
+      ["Thank you", "Gracias"],
     ];
 
-    const insertWordPairText = 'INSERT INTO wordpairs (deck_id, word_original, word_translation) VALUES ($1, $2, $3)';
-    for (const [original, translation] of samplePairs) {
-      await query(insertWordPairText, [deckId, original, translation]);
+    // Insert each wordpair into the wordpairs table for the given deck
+    for (const [wordOriginal, wordTranslation] of samplePairs) {
+      await db.insert(wordpairs).values({
+        deckId,
+        wordOriginal,
+        wordTranslation,
+      });
     }
 
-    console.log('Seed completed successfully');
+    console.log("Seed completed successfully");
   } finally {
     await closeDB();
   }
 }
 
-main().catch(error => {
-  console.error('Seed failed:', error);
+main().catch((error) => {
+  console.error("Seed failed:", error);
   process.exit(1);
 });

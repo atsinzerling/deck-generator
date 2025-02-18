@@ -7,7 +7,7 @@ export interface CreateDeckResponse extends Deck {
 }
 
 export interface UpdateDeckRequest extends ShortDeckWithWordPairs {
-  id: string;
+  id: number;
 }
 
 export interface UpdateDeckResponse extends Deck {
@@ -40,7 +40,7 @@ export interface GenerateDeckResponse extends ShortDeckWithWordPairs {
 export interface RefineDeckRequest {
   prompt: string;
   history: string[];
-  current_deck: ShortDeckWithWordPairs;
+  currentDeck: ShortDeckWithWordPairs;
 } 
 
 export interface RefineDeckResponse extends ShortDeckWithWordPairs {
