@@ -9,16 +9,16 @@
 		"schemas": {
 			"ShortWordPair": {
 				"properties": {
-					"word_original": {
+					"wordOriginal": {
 						"type": "string"
 					},
-					"word_translation": {
+					"wordTranslation": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"word_original",
-					"word_translation"
+					"wordOriginal",
+					"wordTranslation"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -28,10 +28,10 @@
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
 					"wordpairs": {
@@ -43,8 +43,8 @@
 				},
 				"required": [
 					"name",
-					"language_from",
-					"language_to",
+					"languageFrom",
+					"languageTo",
 					"wordpairs"
 				],
 				"type": "object",
@@ -67,10 +67,10 @@
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
 					"wordpairs": {
@@ -82,8 +82,8 @@
 				},
 				"required": [
 					"name",
-					"language_from",
-					"language_to",
+					"languageFrom",
+					"languageTo",
 					"wordpairs"
 				],
 				"type": "object",
@@ -94,10 +94,10 @@
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
 					"wordpairs": {
@@ -109,8 +109,8 @@
 				},
 				"required": [
 					"name",
-					"language_from",
-					"language_to",
+					"languageFrom",
+					"languageTo",
 					"wordpairs"
 				],
 				"type": "object",
@@ -127,14 +127,14 @@
 						},
 						"type": "array"
 					},
-					"current_deck": {
+					"currentDeck": {
 						"$ref": "#/components/schemas/ShortDeckWithWordPairs"
 					}
 				},
 				"required": [
 					"prompt",
 					"history",
-					"current_deck"
+					"currentDeck"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -142,24 +142,25 @@
 			"GetAllDecksResponse": {
 				"properties": {
 					"id": {
-						"type": "string"
+						"type": "number",
+						"format": "double"
 					},
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
-					"created_at": {
+					"createdAt": {
 						"type": "string"
 					},
-					"last_modified": {
+					"lastModified": {
 						"type": "string"
 					},
-					"wordpair_count": {
+					"wordpairCount": {
 						"type": "number",
 						"format": "double"
 					}
@@ -167,11 +168,11 @@
 				"required": [
 					"id",
 					"name",
-					"language_from",
-					"language_to",
-					"created_at",
-					"last_modified",
-					"wordpair_count"
+					"languageFrom",
+					"languageTo",
+					"createdAt",
+					"lastModified",
+					"wordpairCount"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -179,24 +180,25 @@
 			"GetDeckByIdResponse": {
 				"properties": {
 					"id": {
-						"type": "string"
+						"type": "number",
+						"format": "double"
 					},
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
-					"created_at": {
+					"createdAt": {
 						"type": "string"
 					},
-					"last_modified": {
+					"lastModified": {
 						"type": "string"
 					},
-					"wordpair_count": {
+					"wordpairCount": {
 						"type": "number",
 						"format": "double"
 					}
@@ -204,11 +206,11 @@
 				"required": [
 					"id",
 					"name",
-					"language_from",
-					"language_to",
-					"created_at",
-					"last_modified",
-					"wordpair_count"
+					"languageFrom",
+					"languageTo",
+					"createdAt",
+					"lastModified",
+					"wordpairCount"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -216,31 +218,33 @@
 			"GetDeckWordpairsResponse": {
 				"properties": {
 					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"deckId": {
+						"type": "number",
+						"format": "double"
+					},
+					"wordOriginal": {
 						"type": "string"
 					},
-					"deck_id": {
+					"wordTranslation": {
 						"type": "string"
 					},
-					"word_original": {
+					"createdAt": {
 						"type": "string"
 					},
-					"word_translation": {
-						"type": "string"
-					},
-					"created_at": {
-						"type": "string"
-					},
-					"last_modified": {
+					"lastModified": {
 						"type": "string"
 					}
 				},
 				"required": [
 					"id",
-					"deck_id",
-					"word_original",
-					"word_translation",
-					"created_at",
-					"last_modified"
+					"deckId",
+					"wordOriginal",
+					"wordTranslation",
+					"createdAt",
+					"lastModified"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -248,24 +252,25 @@
 			"CreateDeckResponse": {
 				"properties": {
 					"id": {
-						"type": "string"
+						"type": "number",
+						"format": "double"
 					},
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
-					"created_at": {
+					"createdAt": {
 						"type": "string"
 					},
-					"last_modified": {
+					"lastModified": {
 						"type": "string"
 					},
-					"wordpair_count": {
+					"wordpairCount": {
 						"type": "number",
 						"format": "double"
 					}
@@ -273,11 +278,11 @@
 				"required": [
 					"id",
 					"name",
-					"language_from",
-					"language_to",
-					"created_at",
-					"last_modified",
-					"wordpair_count"
+					"languageFrom",
+					"languageTo",
+					"createdAt",
+					"lastModified",
+					"wordpairCount"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -287,10 +292,10 @@
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
 					"wordpairs": {
@@ -302,8 +307,8 @@
 				},
 				"required": [
 					"name",
-					"language_from",
-					"language_to",
+					"languageFrom",
+					"languageTo",
 					"wordpairs"
 				],
 				"type": "object",
@@ -312,24 +317,25 @@
 			"UpdateDeckResponse": {
 				"properties": {
 					"id": {
-						"type": "string"
+						"type": "number",
+						"format": "double"
 					},
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
-					"created_at": {
+					"createdAt": {
 						"type": "string"
 					},
-					"last_modified": {
+					"lastModified": {
 						"type": "string"
 					},
-					"wordpair_count": {
+					"wordpairCount": {
 						"type": "number",
 						"format": "double"
 					}
@@ -337,11 +343,11 @@
 				"required": [
 					"id",
 					"name",
-					"language_from",
-					"language_to",
-					"created_at",
-					"last_modified",
-					"wordpair_count"
+					"languageFrom",
+					"languageTo",
+					"createdAt",
+					"lastModified",
+					"wordpairCount"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -351,10 +357,10 @@
 					"name": {
 						"type": "string"
 					},
-					"language_from": {
+					"languageFrom": {
 						"type": "string"
 					},
-					"language_to": {
+					"languageTo": {
 						"type": "string"
 					},
 					"wordpairs": {
@@ -364,13 +370,14 @@
 						"type": "array"
 					},
 					"id": {
-						"type": "string"
+						"type": "number",
+						"format": "double"
 					}
 				},
 				"required": [
 					"name",
-					"language_from",
-					"language_to",
+					"languageFrom",
+					"languageTo",
 					"wordpairs",
 					"id"
 				],

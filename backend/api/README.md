@@ -9,6 +9,9 @@ generate migration: npx drizzle-kit generate
 push to database: npx drizzle-kit push
 
 
+after making changes to endpoints structure: npx tsoa routes && npx tsoa spec
+
+
 First run migrations: npx ts-node scripts/migrate.ts
 Seed the database: npx ts-node scripts/seed.ts
 Start the development server: npm run dev

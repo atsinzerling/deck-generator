@@ -189,7 +189,7 @@ export class DeckController extends Controller {
   public async createDeck(
     @Body() request: CreateDeckRequest
   ): Promise<CreateDeckResponse> {
-    try {
+    // try {
       const parsedRequest = CreateDeckRequestSchema.parse(request);
       logger.info(`Creating new deck: ${parsedRequest.name} from ${parsedRequest.languageFrom} to ${parsedRequest.languageTo}`);
       
@@ -199,10 +199,10 @@ export class DeckController extends Controller {
       }
       logger.info(`Deck created successfully with ID: ${deck.id}`);
       return deck;
-    } catch (error) {
-      logger.error(`Error in createDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
+    // } catch (error) {
+    //   logger.error(`Error in createDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    //   throw error;
+    // }
   }
 
   @Put('{deckId}')
