@@ -1,165 +1,241 @@
-import { Request, Response } from 'express';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Path,
+  Post,
+  Put,
+  Route,
+  Tags
+} from 'tsoa';
 import { DeckService } from '../services/deck.service';
 import { LLMProvider } from '../services/llm/types';
+import { OpenAIProvider } from '../services/llm/openai';
 import { GENERATE_SYSTEM_PROMPT, REFINE_SYSTEM_PROMPT } from '../config/prompts';
-import { GenerateDeckResponse, RefineDeckResponse } from '../types/api';
+import { 
+  GenerateDeckResponse,
+  GenerateDeckRequest,
+  RefineDeckResponse,
+  RefineDeckRequest,
+  CreateDeckResponse,
+  CreateDeckRequest,
+  UpdateDeckResponse,
+  UpdateDeckRequest,
+  GetAllDecksResponse,
+  GetDeckWordpairsResponse, 
+  GetDeckByIdResponse
+} from '../types/api';
 import { BadRequestError, NotFoundError, InternalServerError } from '../errors';
 import logger from '../utils/logger';
 import { parseLlmResponse } from '../utils/llm';
+import { z } from 'zod';
 
-export class DeckController {
-  constructor(
-    private deckService: DeckService,
-    private llmProvider: LLMProvider
-  ) {}
+// Define zod schemas for request validation
+const GenerateDeckRequestSchema = z.object({
+  prompt: z.string().min(1, { message: "Prompt is required" })
+});
 
+const RefineDeckRequestSchema = z.object({
+  prompt: z.string().min(1, { message: "Prompt is required" }),
+  history: z.array(z.string()),
+  current_deck: z.object({
+    name: z.string().min(1),
+    language_from: z.string().min(1),
+    language_to: z.string().min(1),
+    wordpairs: z.array(z.object({
+      word_original: z.string(),
+      word_translation: z.string()
+    }))
+  })
+});
 
-  async generateDeck(req: Request, res: Response) {
+const CreateDeckRequestSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  language_from: z.string().min(1, { message: "language_from is required" }),
+  language_to: z.string().min(1, { message: "language_to is required" }),
+  wordpairs: z.array(z.object({
+    word_original: z.string(),
+    word_translation: z.string()
+  }))
+});
+
+const UpdateDeckRequestSchema = z.object({
+  id: z.string().min(1, { message: "ID is required" }),
+  name: z.string().min(1, { message: "Name is required" }),
+  language_from: z.string().min(1, { message: "language_from is required" }),
+  language_to: z.string().min(1, { message: "language_to is required" }),
+  wordpairs: z.array(z.object({
+    word_original: z.string(),
+    word_translation: z.string()
+  }))
+});
+
+@Route('decks')
+@Tags('Deck')
+export class DeckController extends Controller {
+  private deckService: DeckService;
+  private llmProvider: LLMProvider;
+
+  constructor() {
+    super();
+    // Instantiate the deck service
+    this.deckService = new DeckService();
+
+    // Initialize the LLM provider here using environment variables.
+    const llmConfig = {
+      apiKey: process.env.OPENAI_API_KEY!,
+      apiUrl: process.env.OPENAI_API_URL!
+    };
+    this.llmProvider = new OpenAIProvider(llmConfig);
+  }
+
+  @Post('generate')
+  public async generateDeck(
+    @Body() request: GenerateDeckRequest
+  ): Promise<GenerateDeckResponse> {
     try {
-      const { prompt } = req.body;
-      if (!prompt) {
-        throw new BadRequestError('Prompt is required');
-      }
-      logger.info(`Generating deck with prompt: ${prompt}`);
+      const parsedRequest = GenerateDeckRequestSchema.parse(request);
+      logger.info(`Generating deck with prompt: ${parsedRequest.prompt}`);
       
-      const llmPrompt = `Generate a deck for the following user prompt: ${prompt}`;
-      logger.debug(`LLM Prompt: ${llmPrompt}`); // Detailed prompt
+      const llmPrompt = `Generate a deck for the following user prompt: ${parsedRequest.prompt}`;
+      logger.debug(`LLM Prompt: ${llmPrompt}`);
 
       const result = await this.llmProvider.generateCompletion(
         GENERATE_SYSTEM_PROMPT,
         llmPrompt
       );
-      const deck : GenerateDeckResponse = parseLlmResponse(result);
-      
+      const deck: GenerateDeckResponse = parseLlmResponse(result);
+
       logger.info(`Deck generated successfully: ${deck.name}`);
-      logger.debug(`LLM Response: ${result}`); // Detailed response
+      logger.debug(`LLM Response: ${result}`);
       
-      res.json(deck);
+      return deck;
     } catch (error) {
       logger.error(`Error in generateDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
 
-  async refineDeck(req: Request, res: Response) {
+  @Post('refine')
+  public async refineDeck(
+    @Body() request: RefineDeckRequest
+  ): Promise<RefineDeckResponse> {
     try {
-      const { prompt, history, current_deck } = req.body;
-      if (!prompt || !history || !current_deck) {
-        throw new BadRequestError('Prompt, history, and current_deck are required');
-      }
-      logger.info(`Refining deck ID: ${current_deck.id} with prompt: ${prompt}`);
+      const parsedRequest = RefineDeckRequestSchema.parse(request);
+      logger.info(`Refining deck ${parsedRequest.current_deck.name} with prompt: ${parsedRequest.prompt}`);
       
-      const userPrompt = `Refine given deck given this data, conversation history and user refinement request. Current deck: ${JSON.stringify(current_deck)}\n\nConversation history: ${JSON.stringify(history)}\n\nRefinement request: ${prompt}`;
-      logger.debug(`LLM Refinement Prompt: ${userPrompt}`); // Detailed prompt
+      const userPrompt = `Refine given deck given this data, conversation history and user refinement request. Current deck: ${JSON.stringify(parsedRequest.current_deck)}\n\nConversation history: ${JSON.stringify(parsedRequest.history)}\n\nRefinement request: ${parsedRequest.prompt}`;
+      logger.debug(`LLM Refinement Prompt: ${userPrompt}`);
 
       const result = await this.llmProvider.generateCompletion(REFINE_SYSTEM_PROMPT, userPrompt);
-      const refinedDeck : RefineDeckResponse = JSON.parse(result);
-      
+      const refinedDeck: RefineDeckResponse = JSON.parse(result);
+
       logger.info(`Deck refined successfully: ${refinedDeck.name}`);
-      logger.debug(`LLM Refinement Response: ${result}`); // Detailed response
+      logger.debug(`LLM Refinement Response: ${result}`);
       
-      res.json(refinedDeck);
+      return refinedDeck;
     } catch (error) {
       logger.error(`Error in refineDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
 
-  // CRUD operations
-  async getAllDecks(req: Request, res: Response) {
+  @Get('/')
+  public async getAllDecks(): Promise<GetAllDecksResponse[]> {
     try {
       logger.info('Fetching all decks');
-      const decks = await this.deckService.getAllDecks();
-      res.json(decks);
+      return await this.deckService.getAllDecks();
     } catch (error) {
       logger.error(`Error in getAllDecks: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
 
-  async getDeckById(req: Request, res: Response) {
+  @Get('{deckId}')
+  public async getDeckById(
+    @Path() deckId: number
+  ): Promise<GetDeckByIdResponse> {
     try {
-      const deckId = parseInt(req.params.deckId);
-      if (isNaN(deckId)) {
-        throw new BadRequestError('Invalid deckId');
-      }
       const deck = await this.deckService.getDeckById(deckId);
       if (!deck) {
         throw new NotFoundError(`Deck with ID ${deckId} not found`);
       }
-      res.json(deck);
+      return deck;
     } catch (error) {
       logger.error(`Error in getDeckById: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
 
-  async getDeckWordpairs(req: Request, res: Response) {
+  @Get('{deckId}/wordpairs')
+  public async getDeckWordpairs(
+    @Path() deckId: number
+  ): Promise<GetDeckWordpairsResponse[]> {
     try {
-      const deckId = parseInt(req.params.deckId);
-      if (isNaN(deckId)) {
-        throw new BadRequestError('Invalid deckId');
-      }
       logger.info(`Fetching wordpairs for deck ID: ${deckId}`);
       const wordpairs = await this.deckService.getDeckWordpairs(deckId);
       if (!wordpairs.length) {
         throw new NotFoundError(`No wordpairs found for deckId ${deckId}`);
       }
-      res.json(wordpairs);
+      return wordpairs;
     } catch (error) {
       logger.error(`Error in getDeckWordpairs: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
 
-  async createDeck(req: Request, res: Response) {
+  @Post('/')
+  public async createDeck(
+    @Body() request: CreateDeckRequest
+  ): Promise<CreateDeckResponse> {
     try {
-      const { name, language_from, language_to, wordpairs } = req.body;
-      logger.info(`Creating new deck: ${name}, from ${language_from} to ${language_to}`);
+      const parsedRequest = CreateDeckRequestSchema.parse(request);
+      logger.info(`Creating new deck: ${parsedRequest.name} from ${parsedRequest.language_from} to ${parsedRequest.language_to}`);
       
-      const deck = await this.deckService.createDeck(req.body);
+      const deck = await this.deckService.createDeck(parsedRequest);
       if (!deck) {
         throw new InternalServerError('Failed to create deck');
       }
       logger.info(`Deck created successfully with ID: ${deck.id}`);
-      
-      res.status(201).json(deck);
+      return deck;
     } catch (error) {
       logger.error(`Error in createDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
 
-  async updateDeck(req: Request, res: Response) {
+  @Put('{deckId}')
+  public async updateDeck(
+    @Path() deckId: number,
+    @Body() request: UpdateDeckRequest
+  ): Promise<UpdateDeckResponse> {
     try {
-      const { id, name, language_from, language_to, wordpairs } = req.body;
-      logger.info(`Updating deck ID: ${id} with name: ${name}`);
+      if (String(deckId) !== request.id) {
+        throw new BadRequestError("deckId in path does not match id in body");
+      }
+      const parsedRequest = UpdateDeckRequestSchema.parse(request);
+      logger.info(`Updating deck ID: ${deckId} with name: ${parsedRequest.name}`);
       
-      const deck = await this.deckService.updateDeck(req.body);
+      const deck = await this.deckService.updateDeck(parsedRequest);
       if (!deck) {
         throw new InternalServerError('Failed to update deck');
       }
       logger.info(`Deck updated successfully: ${deck.name}`);
-      
-      res.json(deck);
+      return deck;
     } catch (error) {
       logger.error(`Error in updateDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
 
-  async deleteDeck(req: Request, res: Response) {
+  @Delete('{deckId}')
+  public async deleteDeck(
+    @Path() deckId: number
+  ): Promise<void> {
     try {
-      const deckId = parseInt(req.params.deckId);
-      if (isNaN(deckId)) {
-        throw new BadRequestError('Invalid deckId');
-      }
       logger.info(`Deleting deck ID: ${deckId}`);
-      
       await this.deckService.deleteDeck(deckId);
-      logger.info(`Deck deleted successfully: ID ${deckId}`);
-      
-      res.status(204).send();
     } catch (error) {
       logger.error(`Error in deleteDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;

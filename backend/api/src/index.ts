@@ -3,15 +3,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import 'express-async-errors';
 import { closeDB } from './db';
-import { DeckService } from './services/deck.service';
-import { DeckController } from './controllers/deck.controller';
-import { setupDeckRoutes } from './routes/deck.routes';
-import { OpenAIProvider } from './services/llm/openai';
-import { LLMConfig } from './services/llm/types';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { requestLogger } from './middleware/requestLogger';
+
+// NEW: Import tsoa generated routes and swagger UI
+import { RegisterRoutes } from './routes/routes';
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger.json';
 
 dotenv.config();
 
@@ -21,19 +21,15 @@ async function main() {
   app.use(express.json());
   app.use(requestLogger);
 
-  const deckService = new DeckService();
+  // Register TSOA-generated routes under '/api'
+  const apiRouter = express.Router();
+  RegisterRoutes(apiRouter);
+  app.use('/api', apiRouter);
 
-  const llmConfig: LLMConfig = {
-    apiKey: process.env.OPENAI_API_KEY!,
-    apiUrl: process.env.OPENAI_API_URL!
-  };
-  const llmProvider = new OpenAIProvider(llmConfig);
-
-  const deckController = new DeckController(deckService, llmProvider);
-  app.use('/api/decks', setupDeckRoutes(deckController));
+  // Serve Swagger UI at /docs (Swagger JSON still available at /swagger.json)
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   app.use(notFoundHandler);
-
   app.use(errorHandler);
 
   const PORT = process.env.PORT || 3000;
@@ -42,17 +38,17 @@ async function main() {
   });
 }
 
-// Add these handlers
+// Add SIGINT & SIGTERM handlers for graceful shutdown
 process.on('SIGINT', async () => {
-    logger.info('Received SIGINT. Cleaning up...');
-    await closeDB();
-    process.exit(0);
+  logger.info('Received SIGINT. Cleaning up...');
+  await closeDB();
+  process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-    logger.info('Received SIGTERM. Cleaning up...');
-    await closeDB();
-    process.exit(0);
+  logger.info('Received SIGTERM. Cleaning up...');
+  await closeDB();
+  process.exit(0);
 });
 
 // Update the error handler in main()

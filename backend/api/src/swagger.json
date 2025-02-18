@@ -1,0 +1,647 @@
+{
+	"openapi": "3.0.0",
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"ShortWordPair": {
+				"properties": {
+					"word_original": {
+						"type": "string"
+					},
+					"word_translation": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"word_original",
+					"word_translation"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"GenerateDeckResponse": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/ShortWordPair"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"name",
+					"language_from",
+					"language_to",
+					"wordpairs"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"GenerateDeckRequest": {
+				"properties": {
+					"prompt": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"prompt"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"RefineDeckResponse": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/ShortWordPair"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"name",
+					"language_from",
+					"language_to",
+					"wordpairs"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"ShortDeckWithWordPairs": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/ShortWordPair"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"name",
+					"language_from",
+					"language_to",
+					"wordpairs"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"RefineDeckRequest": {
+				"properties": {
+					"prompt": {
+						"type": "string"
+					},
+					"history": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"current_deck": {
+						"$ref": "#/components/schemas/ShortDeckWithWordPairs"
+					}
+				},
+				"required": [
+					"prompt",
+					"history",
+					"current_deck"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"GetAllDecksResponse": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"last_modified": {
+						"type": "string"
+					},
+					"wordpair_count": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"language_from",
+					"language_to",
+					"created_at",
+					"last_modified",
+					"wordpair_count"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"GetDeckByIdResponse": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"last_modified": {
+						"type": "string"
+					},
+					"wordpair_count": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"language_from",
+					"language_to",
+					"created_at",
+					"last_modified",
+					"wordpair_count"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"GetDeckWordpairsResponse": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"deck_id": {
+						"type": "string"
+					},
+					"word_original": {
+						"type": "string"
+					},
+					"word_translation": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"last_modified": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"deck_id",
+					"word_original",
+					"word_translation",
+					"created_at",
+					"last_modified"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"CreateDeckResponse": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"last_modified": {
+						"type": "string"
+					},
+					"wordpair_count": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"language_from",
+					"language_to",
+					"created_at",
+					"last_modified",
+					"wordpair_count"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"CreateDeckRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/ShortWordPair"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"name",
+					"language_from",
+					"language_to",
+					"wordpairs"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"UpdateDeckResponse": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"last_modified": {
+						"type": "string"
+					},
+					"wordpair_count": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"language_from",
+					"language_to",
+					"created_at",
+					"last_modified",
+					"wordpair_count"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"UpdateDeckRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"language_from": {
+						"type": "string"
+					},
+					"language_to": {
+						"type": "string"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/ShortWordPair"
+						},
+						"type": "array"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"language_from",
+					"language_to",
+					"wordpairs",
+					"id"
+				],
+				"type": "object",
+				"additionalProperties": true
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "api",
+		"version": "1.0.0",
+		"license": {
+			"name": "ISC"
+		},
+		"contact": {}
+	},
+	"paths": {
+		"/decks/generate": {
+			"post": {
+				"operationId": "GenerateDeck",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/GenerateDeckResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/GenerateDeckRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/decks/refine": {
+			"post": {
+				"operationId": "RefineDeck",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/RefineDeckResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RefineDeckRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/decks": {
+			"get": {
+				"operationId": "GetAllDecks",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/GetAllDecksResponse"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "CreateDeck",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CreateDeckResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateDeckRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/decks/{deckId}": {
+			"get": {
+				"operationId": "GetDeckById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/GetDeckByIdResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "deckId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "UpdateDeck",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UpdateDeckResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "deckId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateDeckRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteDeck",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "deckId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/decks/{deckId}/wordpairs": {
+			"get": {
+				"operationId": "GetDeckWordpairs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/GetDeckWordpairsResponse"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "deckId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}
