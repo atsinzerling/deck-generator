@@ -1,9 +1,6 @@
 import { Pool } from 'pg';
-import dotenv from 'dotenv'; // import 'dotenv/config';
+import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { getDbConnectionString } from '../utils/database';
-
-dotenv.config();
 
 const pool = new Pool({
     host: process.env.PG_HOST,

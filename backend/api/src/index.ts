@@ -7,7 +7,7 @@ import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { requestLogger } from './middleware/requestLogger';
-
+import { responseLogger } from './middleware/responseLogger';
 // NEW: Import tsoa generated routes and swagger UI
 import { RegisterRoutes } from './routes/routes';
 import swaggerUi from 'swagger-ui-express';
@@ -20,7 +20,7 @@ async function main() {
   app.use(cors());
   app.use(express.json());
   app.use(requestLogger);
-
+  app.use(responseLogger);
   // Register TSOA-generated routes under '/api'
   const apiRouter = express.Router();
   RegisterRoutes(apiRouter);
