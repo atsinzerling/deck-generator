@@ -6,6 +6,7 @@ import {
   Path,
   Post,
   Put,
+  Query,
   Route,
   Tags
 } from 'tsoa';
@@ -23,7 +24,7 @@ import {
   UpdateDeckResponse,
   UpdateDeckRequest,
   GetAllDecksResponse,
-  GetDeckWordpairsResponse, 
+  GetDeckWordpairsResponse,
   GetDeckByIdResponse
 } from '../types/api';
 import { BadRequestError, NotFoundError, InternalServerError } from '../errors';
@@ -35,6 +36,20 @@ import {
   CreateDeckRequestSchema,
   UpdateDeckRequestSchema
 } from '../types/zodSchemas';
+
+import {
+  DeckCreateInput,
+  DeckUpdateInput,
+  DeckOptionalReturn,
+  WordPairInput,
+  WordPairEntity,
+  WordPairSummary,
+  WordPairUpdateInput,
+  DeckEntity,
+  DeckDetail,
+  DeckSummary,
+  DeckSummaryOptionalReturn
+} from '../types/deck2';
 
 
 @Route('decks')
@@ -48,7 +63,7 @@ export class DeckController extends Controller {
     // Instantiate the deck service
     this.deckService = new DeckService();
 
-    // Initialize the LLM provider here using environment variables.
+    // Initialize the LLM provider using environment variables.
     const llmConfig = {
       apiKey: process.env.OPENAI_API_KEY!,
       apiUrl: process.env.OPENAI_API_URL!
@@ -60,7 +75,6 @@ export class DeckController extends Controller {
   public async generateDeck(
     @Body() request: GenerateDeckRequest
   ): Promise<GenerateDeckResponse> {
-    try {
       const parsedRequest = GenerateDeckRequestSchema.parse(request);
       logger.info(`Generating deck with prompt: ${parsedRequest.prompt}`);
       
@@ -77,17 +91,12 @@ export class DeckController extends Controller {
       logger.debug(`LLM Response: ${result}`);
       
       return deck;
-    } catch (error) {
-      logger.error(`Error in generateDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
   }
 
   @Post('refine')
   public async refineDeck(
     @Body() request: RefineDeckRequest
   ): Promise<RefineDeckResponse> {
-    try {
       const parsedRequest = RefineDeckRequestSchema.parse(request);
       logger.info(`Refining deck ${parsedRequest.currentDeck.name} with prompt: ${parsedRequest.prompt}`);
       
@@ -101,62 +110,34 @@ export class DeckController extends Controller {
       logger.debug(`LLM Refinement Response: ${result}`);
       
       return refinedDeck;
-    } catch (error) {
-      logger.error(`Error in refineDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
   }
 
   @Get('/')
   public async getAllDecks(): Promise<GetAllDecksResponse[]> {
-    try {
       logger.info('Fetching all decks');
       return await this.deckService.getAllDecks();
-    } catch (error) {
-      logger.error(`Error in getAllDecks: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
   }
 
+  /**
+   * Get a deck by id.
+   * If "includeWordpairs" is set to true, fetch the deck details with its associated wordpairs.
+   */
   @Get('{deckId}')
   public async getDeckById(
-    @Path() deckId: number
-  ): Promise<GetDeckByIdResponse> {
-    try {
-      const deck = await this.deckService.getDeckById(deckId);
-      if (!deck) {
-        throw new NotFoundError(`Deck with ID ${deckId} not found`);
-      }
+    @Path() deckId: number,
+    @Query() includeWordpairs?: boolean
+  ): Promise<DeckSummaryOptionalReturn> {
+      const deck = await this.deckService.getDeckById(deckId, includeWordpairs);
       return deck;
-    } catch (error) {
-      logger.error(`Error in getDeckById: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
   }
 
-  @Get('{deckId}/wordpairs')
-  public async getDeckWordpairs(
-    @Path() deckId: number
-  ): Promise<GetDeckWordpairsResponse[]> {
-    try {
-      logger.info(`Fetching wordpairs for deck ID: ${deckId}`);
-      const wordpairs = await this.deckService.getDeckWordpairs(deckId);
-      if (!wordpairs.length) {
-        throw new NotFoundError(`No wordpairs found for deckId ${deckId}`);
-      }
-      return wordpairs;
-    } catch (error) {
-      logger.error(`Error in getDeckWordpairs: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
 
   @Post('/')
   public async createDeck(
-    @Body() request: CreateDeckRequest
-  ): Promise<CreateDeckResponse> {
-    // try {
-      const parsedRequest = CreateDeckRequestSchema.parse(request);
+    @Body() request: DeckCreateInput
+  ): Promise<DeckOptionalReturn> {
+      // const parsedRequest = CreateDeckRequestSchema.parse(request);
+      const parsedRequest = request;
       logger.info(`Creating new deck: ${parsedRequest.name} from ${parsedRequest.languageFrom} to ${parsedRequest.languageTo}`);
       
       const deck = await this.deckService.createDeck(parsedRequest);
@@ -165,22 +146,18 @@ export class DeckController extends Controller {
       }
       logger.info(`Deck created successfully with ID: ${deck.id}`);
       return deck;
-    // } catch (error) {
-    //   logger.error(`Error in createDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    //   throw error;
-    // }
   }
 
   @Put('{deckId}')
   public async updateDeck(
     @Path() deckId: number,
-    @Body() request: UpdateDeckRequest
-  ): Promise<UpdateDeckResponse> {
-    try {
+    @Body() request: DeckUpdateInput
+  ): Promise<DeckOptionalReturn> {
       if (deckId !== request.id) {
         throw new BadRequestError("deckId in path does not match id in body");
       }
-      const parsedRequest = UpdateDeckRequestSchema.parse(request);
+      // const parsedRequest = UpdateDeckRequestSchema.parse(request);
+      const parsedRequest = request;
       logger.info(`Updating deck ID: ${deckId} with name: ${parsedRequest.name}`);
       
       const deck = await this.deckService.updateDeck(parsedRequest);
@@ -189,22 +166,56 @@ export class DeckController extends Controller {
       }
       logger.info(`Deck updated successfully: ${deck.name}`);
       return deck;
-    } catch (error) {
-      logger.error(`Error in updateDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
   }
 
   @Delete('{deckId}')
   public async deleteDeck(
     @Path() deckId: number
   ): Promise<void> {
-    try {
       logger.info(`Deleting deck ID: ${deckId}`);
       await this.deckService.deleteDeck(deckId);
-    } catch (error) {
-      logger.error(`Error in deleteDeck: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
+  }
+
+  // New WordPair CRUD Endpoints
+
+
+  @Get('{deckId}/wordpairs')
+  public async getDeckWordpairs(
+    @Path() deckId: number
+  ): Promise<WordPairEntity[]> {
+      logger.info(`Fetching wordpairs for deck ID: ${deckId}`);
+      const wordpairs = await this.deckService.getDeckWordpairs(deckId);
+      if (!wordpairs.length) {
+        throw new NotFoundError(`No wordpairs found for deckId ${deckId}`);
+      }
+      return wordpairs;
+  }
+
+  @Post('{deckId}/wordpairs')
+  public async createWordpairs(
+    @Path() deckId: number,
+    @Body() wordpairs: WordPairInput[]
+  ): Promise<WordPairEntity[]> {
+      logger.info(`Creating wordpairs for deck ID: ${deckId}`);
+      const newWordpairs = await this.deckService.createWordpairs(deckId, wordpairs);
+      return newWordpairs;
+  }
+
+  @Put('{deckId}/wordpairs')
+  public async updateWordpairs(
+    @Path() deckId: number,
+    @Body() wordpairs: Array<{ id?: number } & WordPairInput>
+  ): Promise<WordPairEntity[]> {
+      logger.info(`Updating wordpairs for deck ID: ${deckId}`);
+      const updatedWordpairs = await this.deckService.updateWordpairs(deckId, wordpairs);
+      return updatedWordpairs;
+  }
+
+  @Delete('{deckId}/wordpairs')
+  public async deleteWordpairs(
+    @Path() deckId: number
+  ): Promise<void> {
+      logger.info(`Deleting all wordpairs for deck ID: ${deckId}`);
+      await this.deckService.deleteWordpairs(deckId);
   }
 } 

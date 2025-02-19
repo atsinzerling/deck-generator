@@ -86,21 +86,7 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GetDeckByIdResponse": {
-        "dataType": "refObject",
-        "properties": {
-            "id": {"dataType":"double","required":true},
-            "name": {"dataType":"string","required":true},
-            "languageFrom": {"dataType":"string","required":true},
-            "languageTo": {"dataType":"string","required":true},
-            "createdAt": {"dataType":"string","required":true},
-            "lastModified": {"dataType":"string","required":true},
-            "wordpairCount": {"dataType":"double","required":true},
-        },
-        "additionalProperties": true,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GetDeckWordpairsResponse": {
+    "WordPairEntity": {
         "dataType": "refObject",
         "properties": {
             "id": {"dataType":"double","required":true},
@@ -113,7 +99,7 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateDeckResponse": {
+    "DeckSummaryOptionalReturn": {
         "dataType": "refObject",
         "properties": {
             "id": {"dataType":"double","required":true},
@@ -123,22 +109,12 @@ const models: TsoaRoute.Models = {
             "createdAt": {"dataType":"string","required":true},
             "lastModified": {"dataType":"string","required":true},
             "wordpairCount": {"dataType":"double","required":true},
+            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairEntity"}},
         },
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateDeckRequest": {
-        "dataType": "refObject",
-        "properties": {
-            "name": {"dataType":"string","required":true},
-            "languageFrom": {"dataType":"string","required":true},
-            "languageTo": {"dataType":"string","required":true},
-            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"ShortWordPair"},"required":true},
-        },
-        "additionalProperties": true,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "UpdateDeckResponse": {
+    "DeckOptionalReturn": {
         "dataType": "refObject",
         "properties": {
             "id": {"dataType":"double","required":true},
@@ -147,19 +123,40 @@ const models: TsoaRoute.Models = {
             "languageTo": {"dataType":"string","required":true},
             "createdAt": {"dataType":"string","required":true},
             "lastModified": {"dataType":"string","required":true},
-            "wordpairCount": {"dataType":"double","required":true},
+            "wordpairCount": {"dataType":"double"},
+            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairEntity"}},
         },
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "UpdateDeckRequest": {
+    "WordPairInput": {
+        "dataType": "refObject",
+        "properties": {
+            "wordOriginal": {"dataType":"string","required":true},
+            "wordTranslation": {"dataType":"string","required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DeckCreateInput": {
         "dataType": "refObject",
         "properties": {
             "name": {"dataType":"string","required":true},
             "languageFrom": {"dataType":"string","required":true},
             "languageTo": {"dataType":"string","required":true},
-            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"ShortWordPair"},"required":true},
+            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"}},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DeckUpdateInput": {
+        "dataType": "refObject",
+        "properties": {
             "id": {"dataType":"double","required":true},
+            "name": {"dataType":"string","required":true},
+            "languageFrom": {"dataType":"string","required":true},
+            "languageTo": {"dataType":"string","required":true},
+            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"}},
         },
         "additionalProperties": true,
     },
@@ -272,6 +269,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsDeckController_getDeckById: Record<string, TsoaRoute.ParameterSchema> = {
                 deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
+                includeWordpairs: {"in":"query","name":"includeWordpairs","dataType":"boolean"},
         };
         app.get('/decks/:deckId',
             ...(fetchMiddlewares<RequestHandler>(DeckController)),
@@ -300,38 +298,8 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsDeckController_getDeckWordpairs: Record<string, TsoaRoute.ParameterSchema> = {
-                deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
-        };
-        app.get('/decks/:deckId/wordpairs',
-            ...(fetchMiddlewares<RequestHandler>(DeckController)),
-            ...(fetchMiddlewares<RequestHandler>(DeckController.prototype.getDeckWordpairs)),
-
-            async function DeckController_getDeckWordpairs(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsDeckController_getDeckWordpairs, request, response });
-
-                const controller = new DeckController();
-
-              await templateService.apiHandler({
-                methodName: 'getDeckWordpairs',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsDeckController_createDeck: Record<string, TsoaRoute.ParameterSchema> = {
-                request: {"in":"body","name":"request","required":true,"ref":"CreateDeckRequest"},
+                request: {"in":"body","name":"request","required":true,"ref":"DeckCreateInput"},
         };
         app.post('/decks',
             ...(fetchMiddlewares<RequestHandler>(DeckController)),
@@ -362,7 +330,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsDeckController_updateDeck: Record<string, TsoaRoute.ParameterSchema> = {
                 deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
-                request: {"in":"body","name":"request","required":true,"ref":"UpdateDeckRequest"},
+                request: {"in":"body","name":"request","required":true,"ref":"DeckUpdateInput"},
         };
         app.put('/decks/:deckId',
             ...(fetchMiddlewares<RequestHandler>(DeckController)),
@@ -410,6 +378,128 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'deleteDeck',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsDeckController_getDeckWordpairs: Record<string, TsoaRoute.ParameterSchema> = {
+                deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
+        };
+        app.get('/decks/:deckId/wordpairs',
+            ...(fetchMiddlewares<RequestHandler>(DeckController)),
+            ...(fetchMiddlewares<RequestHandler>(DeckController.prototype.getDeckWordpairs)),
+
+            async function DeckController_getDeckWordpairs(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsDeckController_getDeckWordpairs, request, response });
+
+                const controller = new DeckController();
+
+              await templateService.apiHandler({
+                methodName: 'getDeckWordpairs',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsDeckController_createWordpairs: Record<string, TsoaRoute.ParameterSchema> = {
+                deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
+                wordpairs: {"in":"body","name":"wordpairs","required":true,"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"}},
+        };
+        app.post('/decks/:deckId/wordpairs',
+            ...(fetchMiddlewares<RequestHandler>(DeckController)),
+            ...(fetchMiddlewares<RequestHandler>(DeckController.prototype.createWordpairs)),
+
+            async function DeckController_createWordpairs(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsDeckController_createWordpairs, request, response });
+
+                const controller = new DeckController();
+
+              await templateService.apiHandler({
+                methodName: 'createWordpairs',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsDeckController_updateWordpairs: Record<string, TsoaRoute.ParameterSchema> = {
+                deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
+                wordpairs: {"in":"body","name":"wordpairs","required":true,"dataType":"array","array":{"dataType":"intersection","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{"id":{"dataType":"double"}}},{"ref":"WordPairInput"}]}},
+        };
+        app.put('/decks/:deckId/wordpairs',
+            ...(fetchMiddlewares<RequestHandler>(DeckController)),
+            ...(fetchMiddlewares<RequestHandler>(DeckController.prototype.updateWordpairs)),
+
+            async function DeckController_updateWordpairs(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsDeckController_updateWordpairs, request, response });
+
+                const controller = new DeckController();
+
+              await templateService.apiHandler({
+                methodName: 'updateWordpairs',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsDeckController_deleteWordpairs: Record<string, TsoaRoute.ParameterSchema> = {
+                deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
+        };
+        app.delete('/decks/:deckId/wordpairs',
+            ...(fetchMiddlewares<RequestHandler>(DeckController)),
+            ...(fetchMiddlewares<RequestHandler>(DeckController.prototype.deleteWordpairs)),
+
+            async function DeckController_deleteWordpairs(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsDeckController_deleteWordpairs, request, response });
+
+                const controller = new DeckController();
+
+              await templateService.apiHandler({
+                methodName: 'deleteWordpairs',
                 controller,
                 response,
                 next,

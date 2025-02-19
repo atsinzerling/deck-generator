@@ -177,45 +177,7 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"GetDeckByIdResponse": {
-				"properties": {
-					"id": {
-						"type": "number",
-						"format": "double"
-					},
-					"name": {
-						"type": "string"
-					},
-					"languageFrom": {
-						"type": "string"
-					},
-					"languageTo": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"lastModified": {
-						"type": "string"
-					},
-					"wordpairCount": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"id",
-					"name",
-					"languageFrom",
-					"languageTo",
-					"createdAt",
-					"lastModified",
-					"wordpairCount"
-				],
-				"type": "object",
-				"additionalProperties": true
-			},
-			"GetDeckWordpairsResponse": {
+			"WordPairEntity": {
 				"properties": {
 					"id": {
 						"type": "number",
@@ -249,7 +211,7 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"CreateDeckResponse": {
+			"DeckSummaryOptionalReturn": {
 				"properties": {
 					"id": {
 						"type": "number",
@@ -273,6 +235,12 @@
 					"wordpairCount": {
 						"type": "number",
 						"format": "double"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/WordPairEntity"
+						},
+						"type": "array"
 					}
 				},
 				"required": [
@@ -287,34 +255,8 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"CreateDeckRequest": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"languageFrom": {
-						"type": "string"
-					},
-					"languageTo": {
-						"type": "string"
-					},
-					"wordpairs": {
-						"items": {
-							"$ref": "#/components/schemas/ShortWordPair"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"name",
-					"languageFrom",
-					"languageTo",
-					"wordpairs"
-				],
-				"type": "object",
-				"additionalProperties": true
-			},
-			"UpdateDeckResponse": {
+			"DeckOptionalReturn": {
+				"description": "DeckOptionalReturn is used by deck insertion and update endpoints to return their\nintended result. It is similar to DeckDetail, but the last two fields (wordpairCount and wordpairs)\nare optional. This offers flexibility, for instance, when the full list of wordpairs isn't returned.",
 				"properties": {
 					"id": {
 						"type": "number",
@@ -338,6 +280,12 @@
 					"wordpairCount": {
 						"type": "number",
 						"format": "double"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/WordPairEntity"
+						},
+						"type": "array"
 					}
 				},
 				"required": [
@@ -346,13 +294,29 @@
 					"languageFrom",
 					"languageTo",
 					"createdAt",
-					"lastModified",
-					"wordpairCount"
+					"lastModified"
 				],
 				"type": "object",
 				"additionalProperties": true
 			},
-			"UpdateDeckRequest": {
+			"WordPairInput": {
+				"description": "This file defines the types used for deck and wordpair interactions.\n\nNaming Conventions:\n-------------------\nDeck Types:\n- DeckCreateInput: Payload for deck insertion. Contains basic fields and an optional list of wordpairs.\n- DeckUpdateInput: Payload for updating a deck. Contains basic fields (without timestamps) and an optional wordpairs list.\n- DeckEntity:   Represents a deck as stored in the database.\n- DeckSummary:  Extends DeckEntity with the computed \"wordpairCount\". \n- DeckDetail:   Extends DeckSummary by including the full list of associated wordpairs.\n- DeckOptionalReturn: Similar to DeckDetail but with \"wordpairCount\" and \"wordpairs\" optional.\n\nWordPair Types:\n- WordPairInput:  Minimal data required for inserting/updating a wordpair.\n- WordPairSummary: A lightweight version of a wordpair (includes id, deckId, and the word values).\n- WordPairEntity:  Full representation of a wordpair including timestamps.",
+				"properties": {
+					"wordOriginal": {
+						"type": "string"
+					},
+					"wordTranslation": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"wordOriginal",
+					"wordTranslation"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"DeckCreateInput": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -365,21 +329,48 @@
 					},
 					"wordpairs": {
 						"items": {
-							"$ref": "#/components/schemas/ShortWordPair"
+							"$ref": "#/components/schemas/WordPairInput"
 						},
-						"type": "array"
-					},
-					"id": {
-						"type": "number",
-						"format": "double"
+						"type": "array",
+						"description": "Optional array of wordpairs to be inserted along with the deck."
 					}
 				},
 				"required": [
 					"name",
 					"languageFrom",
-					"languageTo",
-					"wordpairs",
-					"id"
+					"languageTo"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"DeckUpdateInput": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"name": {
+						"type": "string"
+					},
+					"languageFrom": {
+						"type": "string"
+					},
+					"languageTo": {
+						"type": "string"
+					},
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/WordPairInput"
+						},
+						"type": "array",
+						"description": "Optional array of wordpairs. If not provided, only deck metadata is updated."
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"languageFrom",
+					"languageTo"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -492,7 +483,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/CreateDeckResponse"
+									"$ref": "#/components/schemas/DeckOptionalReturn"
 								}
 							}
 						}
@@ -508,7 +499,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/CreateDeckRequest"
+								"$ref": "#/components/schemas/DeckCreateInput"
 							}
 						}
 					}
@@ -524,12 +515,13 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/GetDeckByIdResponse"
+									"$ref": "#/components/schemas/DeckSummaryOptionalReturn"
 								}
 							}
 						}
 					}
 				},
+				"description": "Get a deck by id.\nIf \"includeWordpairs\" is set to true, fetch the deck details with its associated wordpairs.",
 				"tags": [
 					"Deck"
 				],
@@ -543,6 +535,14 @@
 							"format": "double",
 							"type": "number"
 						}
+					},
+					{
+						"in": "query",
+						"name": "includeWordpairs",
+						"required": false,
+						"schema": {
+							"type": "boolean"
+						}
 					}
 				]
 			},
@@ -554,7 +554,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UpdateDeckResponse"
+									"$ref": "#/components/schemas/DeckOptionalReturn"
 								}
 							}
 						}
@@ -580,7 +580,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/UpdateDeckRequest"
+								"$ref": "#/components/schemas/DeckUpdateInput"
 							}
 						}
 					}
@@ -620,12 +620,140 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/GetDeckWordpairsResponse"
+										"$ref": "#/components/schemas/WordPairEntity"
 									},
 									"type": "array"
 								}
 							}
 						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "deckId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateWordpairs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/WordPairEntity"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "deckId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/WordPairInput"
+								},
+								"type": "array"
+							}
+						}
+					}
+				}
+			},
+			"put": {
+				"operationId": "UpdateWordpairs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/WordPairEntity"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "deckId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"items": {
+									"allOf": [
+										{
+											"properties": {
+												"id": {
+													"type": "number",
+													"format": "double"
+												}
+											},
+											"type": "object"
+										},
+										{
+											"$ref": "#/components/schemas/WordPairInput"
+										}
+									]
+								},
+								"type": "array"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteWordpairs",
+				"responses": {
+					"204": {
+						"description": "No content"
 					}
 				},
 				"tags": [
