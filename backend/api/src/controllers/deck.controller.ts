@@ -29,47 +29,13 @@ import {
 import { BadRequestError, NotFoundError, InternalServerError } from '../errors';
 import logger from '../utils/logger';
 import { parseLlmResponse } from '../utils/llm';
-import { z } from 'zod';
+import {
+  GenerateDeckRequestSchema,
+  RefineDeckRequestSchema,
+  CreateDeckRequestSchema,
+  UpdateDeckRequestSchema
+} from '../types/zodSchemas';
 
-// Define zod schemas for request validation
-const GenerateDeckRequestSchema = z.object({
-  prompt: z.string().min(1, { message: "Prompt is required" })
-});
-
-const RefineDeckRequestSchema = z.object({
-  prompt: z.string().min(1, { message: "Prompt is required" }),
-  history: z.array(z.string()),
-  currentDeck: z.object({
-    name: z.string().min(1),
-    languageFrom: z.string().min(1),
-    languageTo: z.string().min(1),
-    wordpairs: z.array(z.object({
-      wordOriginal: z.string(),
-      wordTranslation: z.string()
-    }))
-  })
-});
-
-const CreateDeckRequestSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  languageFrom: z.string().min(1, { message: "languageFrom is required" }),
-  languageTo: z.string().min(1, { message: "languageTo is required" }),
-  wordpairs: z.array(z.object({
-    wordOriginal: z.string(),
-    wordTranslation: z.string()
-  }))
-});
-
-const UpdateDeckRequestSchema = z.object({
-  id: z.number().min(1, { message: "ID is required" }),
-  name: z.string().min(1, { message: "Name is required" }),
-  languageFrom: z.string().min(1, { message: "languageFrom is required" }),
-  languageTo: z.string().min(1, { message: "languageTo is required" }),
-  wordpairs: z.array(z.object({
-    wordOriginal: z.string(),
-    wordTranslation: z.string()
-  }))
-});
 
 @Route('decks')
 @Tags('Deck')

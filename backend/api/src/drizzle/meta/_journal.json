@@ -15,6 +15,13 @@
       "when": 1739910731633,
       "tag": "0001_dizzy_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1739925289627,
+      "tag": "0002_gigantic_longshot",
+      "breakpoints": true
     }
   ]
 }

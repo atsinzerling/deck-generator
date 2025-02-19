@@ -20,38 +20,33 @@ export class DeckService {
   async getAllDecks(): Promise<GetAllDecksResponse[]> {
     const decksWithCount = await db
       .select({
-        id: decks.id,
-        name: decks.name,
-        languageFrom: decks.languageFrom,
-        languageTo: decks.languageTo,
-        lastModified: decks.lastModified,
-        createdAt: decks.createdAt,
-        // Use a raw SQL snippet to calculate the count of wordpairs
-        wordpairCount: sql<number>`COUNT(${wordpairs.id})`
+        id: sql<number>`id`,
+        name: sql<string>`name`,
+        languageFrom: sql<string>`language_from`,
+        languageTo: sql<string>`language_to`,
+        lastModified: sql<string>`last_modified`,
+        createdAt: sql<string>`created_at`,
+        wordpairCount: sql<number>`wordpair_count`
       })
-      .from(decks)
-      .leftJoin(wordpairs, eq(wordpairs.deckId, decks.id))
-      .groupBy(decks.id)
-      .orderBy(desc(decks.lastModified));
+      .from(sql`deck_with_wordpair_count`)
+      .orderBy(desc(sql`last_modified`));
 
     return decksWithCount;
   }
 
   async getDeckById(deckId: number): Promise<GetDeckByIdResponse> {
     const deckData = await db
-      .select({
-        id: decks.id,
-        name: decks.name,
-        languageFrom: decks.languageFrom,
-        languageTo: decks.languageTo,
-        createdAt: decks.createdAt,
-        lastModified: decks.lastModified,
-        wordpairCount: sql<number>`COUNT(${wordpairs.id})`
-      })
-      .from(decks)
-      .leftJoin(wordpairs, eq(wordpairs.deckId, decks.id))
-      .where(eq(decks.id, deckId))
-      .groupBy(decks.id);
+    .select({
+      id: sql<number>`id`,
+      name: sql<string>`name`,
+      languageFrom: sql<string>`language_from`,
+      languageTo: sql<string>`language_to`,
+      lastModified: sql<string>`last_modified`,
+      createdAt: sql<string>`created_at`,
+      wordpairCount: sql<number>`wordpair_count`
+    })
+    .from(sql`deck_with_wordpair_count`)
+    .where(eq(sql`id`, deckId))
 
     if (!deckData[0]) {
       throw new NotFoundError(`Deck with id ${deckId} not found`);

@@ -1,0 +1,2 @@
+CREATE INDEX "idx_wordpairs_deck_id" ON "wordpairs" USING btree ("deck_id" int4_ops);--> statement-breakpoint
+CREATE VIEW "public"."deck_with_wordpair_count" AS (SELECT d.id, d.name, d.language_from, d.language_to, d.created_at, d.last_modified, count(w.id)::integer AS wordpair_count FROM decks d LEFT JOIN wordpairs w ON d.id = w.deck_id GROUP BY d.id);
