@@ -2,6 +2,7 @@
 import OpenAI from 'openai';
 import { LLMConfig, LLMProvider } from './types';
 import logger from '../../utils/logger';
+import { LLMError } from '../../errors/LLMError';
 
 export class OpenAIProvider implements LLMProvider {
   private openai: OpenAI;
@@ -16,7 +17,7 @@ export class OpenAIProvider implements LLMProvider {
 
   async generateCompletion(systemPrompt: string, userPrompt: string): Promise<string> {
     try {
-      logger.debug(`OpenAI Request - System Prompt: ${systemPrompt}`);
+      // logger.debug(`OpenAI Request - System Prompt: ${systemPrompt}`);
       logger.debug(`OpenAI Request - User Prompt: ${userPrompt}`);
 
       const completion = await this.openai.chat.completions.create({
@@ -35,8 +36,7 @@ export class OpenAIProvider implements LLMProvider {
 
       return content || '';
     } catch (error: any) {
-      logger.error(`OpenAI API call failed: ${error.message}`);
-      throw new Error(`OpenAI API call failed: ${error.message}`);
+      throw new LLMError(`OpenAI API call failed: ${error.message}`, error);
     }
   }
 } 

@@ -1,3 +1,5 @@
+import { LLMDeck } from "../types/deck";
+
 export const GENERATE_SYSTEM_PROMPT = `You are a language learning expert AI that creates vocabulary decks. 
 You must respond ONLY with a JSON object in the following format:
 {
@@ -29,3 +31,11 @@ Based on the current deck, conversation history, and new refinement request, out
   ]
 }
 Maintain consistency with previous translations unless explicitly asked to change them.`; 
+
+export function getGenerateDeckPrompt(languageFrom: string, languageTo: string, pairCount: number, theme: string, additionalPrompt: string) {
+  return `Create a deck from ${languageFrom} to ${languageTo} with ${pairCount} word pairs on the topic/theme of ${theme}.${additionalPrompt !== '' ? ` Additional instructions: ${additionalPrompt}` : ''}`;
+}
+
+export function getRefineDeckPrompt(prompt: string, currentDeck: LLMDeck, history: string[]) {
+  return `Refine given deck given the deck details, conversation history and user refinement request. Current deck: ${JSON.stringify(currentDeck)}\n\nConversation history: ${JSON.stringify(history)}\n\nRefinement request: ${prompt}`;
+}

@@ -12,7 +12,7 @@ import type { Request as ExRequest, Response as ExResponse, RequestHandler, Rout
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
 const models: TsoaRoute.Models = {
-    "ShortWordPair": {
+    "WordPairInput": {
         "dataType": "refObject",
         "properties": {
             "wordOriginal": {"dataType":"string","required":true},
@@ -21,13 +21,13 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GenerateDeckResponse": {
+    "LLMDeck": {
         "dataType": "refObject",
         "properties": {
             "name": {"dataType":"string","required":true},
             "languageFrom": {"dataType":"string","required":true},
             "languageTo": {"dataType":"string","required":true},
-            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"ShortWordPair"},"required":true},
+            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"},"required":true},
         },
         "additionalProperties": true,
     },
@@ -35,29 +35,11 @@ const models: TsoaRoute.Models = {
     "GenerateDeckRequest": {
         "dataType": "refObject",
         "properties": {
-            "prompt": {"dataType":"string","required":true},
-        },
-        "additionalProperties": true,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RefineDeckResponse": {
-        "dataType": "refObject",
-        "properties": {
-            "name": {"dataType":"string","required":true},
             "languageFrom": {"dataType":"string","required":true},
             "languageTo": {"dataType":"string","required":true},
-            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"ShortWordPair"},"required":true},
-        },
-        "additionalProperties": true,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ShortDeckWithWordPairs": {
-        "dataType": "refObject",
-        "properties": {
-            "name": {"dataType":"string","required":true},
-            "languageFrom": {"dataType":"string","required":true},
-            "languageTo": {"dataType":"string","required":true},
-            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"ShortWordPair"},"required":true},
+            "pairCount": {"dataType":"double","required":true},
+            "theme": {"dataType":"string","required":true},
+            "additionalPrompt": {"dataType":"string","required":true},
         },
         "additionalProperties": true,
     },
@@ -67,12 +49,12 @@ const models: TsoaRoute.Models = {
         "properties": {
             "prompt": {"dataType":"string","required":true},
             "history": {"dataType":"array","array":{"dataType":"string"},"required":true},
-            "currentDeck": {"ref":"ShortDeckWithWordPairs","required":true},
+            "currentDeck": {"ref":"LLMDeck","required":true},
         },
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GetAllDecksResponse": {
+    "DeckSummary": {
         "dataType": "refObject",
         "properties": {
             "id": {"dataType":"double","required":true},
@@ -129,15 +111,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "WordPairInput": {
-        "dataType": "refObject",
-        "properties": {
-            "wordOriginal": {"dataType":"string","required":true},
-            "wordTranslation": {"dataType":"string","required":true},
-        },
-        "additionalProperties": true,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DeckCreateInput": {
         "dataType": "refObject",
         "properties": {
@@ -157,6 +130,17 @@ const models: TsoaRoute.Models = {
             "languageFrom": {"dataType":"string","required":true},
             "languageTo": {"dataType":"string","required":true},
             "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"}},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "WordPairUpdateInput": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"double"},
+            "deckId": {"dataType":"double"},
+            "wordOriginal": {"dataType":"string","required":true},
+            "wordTranslation": {"dataType":"string","required":true},
         },
         "additionalProperties": true,
     },
@@ -452,7 +436,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsDeckController_updateWordpairs: Record<string, TsoaRoute.ParameterSchema> = {
                 deckId: {"in":"path","name":"deckId","required":true,"dataType":"double"},
-                wordpairs: {"in":"body","name":"wordpairs","required":true,"dataType":"array","array":{"dataType":"intersection","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{"id":{"dataType":"double"}}},{"ref":"WordPairInput"}]}},
+                wordpairs: {"in":"body","name":"wordpairs","required":true,"dataType":"array","array":{"dataType":"refObject","ref":"WordPairUpdateInput"}},
         };
         app.put('/decks/:deckId/wordpairs',
             ...(fetchMiddlewares<RequestHandler>(DeckController)),

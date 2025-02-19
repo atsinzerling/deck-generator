@@ -1,40 +1,25 @@
 import { sql, eq, asc, desc, and, notInArray as notIn } from 'drizzle-orm';
 
 import { db } from '../drizzle/client';
-// Import your table schemas – adjust the import path based on your project structure.
 import { decks, wordpairs } from '../drizzle/schema';
 
-import { 
-  CreateDeckRequest,
-  CreateDeckResponse,
-  UpdateDeckRequest,
-  UpdateDeckResponse,
-  GetAllDecksResponse,
-  GetDeckWordpairsResponse,
-  GetDeckByIdResponse
-} from '../types/api';
-import { NotFoundError } from '../errors/NotFoundError';
+import { NotFoundError, InternalServerError } from '../errors';
 
-// Use the new deck/wordpair types from deck2.ts
 import {
   DeckCreateInput,
   DeckUpdateInput,
   DeckOptionalReturn,
   WordPairInput,
   WordPairEntity,
-  WordPairSummary,
   WordPairUpdateInput,
-  DeckEntity,
-  DeckDetail,
   DeckSummary,
   DeckSummaryOptionalReturn
-} from '../types/deck2';
+} from '../types/deck';
 
 export class DeckService {
   constructor() {}
 
   async getAllDecks(): Promise<DeckSummary[]> {
-    // This method remains using your view for wordpair counts.
     const decksWithCount = await db
       .select({
         id: sql<number>`id`,
@@ -106,7 +91,7 @@ export class DeckService {
       .returning();
 
     if (!insertedDeck[0]) {
-      throw new Error('Failed to create deck.');
+      throw new InternalServerError('Failed to create deck.');
     }
 
     const deck = insertedDeck[0];

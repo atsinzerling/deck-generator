@@ -7,7 +7,8 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"ShortWordPair": {
+			"WordPairInput": {
+				"description": "This file defines the types used for deck and wordpair interactions.\n\nNaming Conventions:\n-------------------\nDeck Types:\n- DeckCreateInput: Payload for deck insertion. Contains basic fields and an optional list of wordpairs.\n- DeckUpdateInput: Payload for updating a deck. Contains basic fields (without timestamps) and an optional wordpairs list.\n- DeckEntity:   Represents a deck as stored in the database.\n- DeckSummary:  Extends DeckEntity with the computed \"wordpairCount\". \n- DeckDetail:   Extends DeckSummary by including the full list of associated wordpairs.\n- DeckOptionalReturn: Similar to DeckDetail but with \"wordpairCount\" and \"wordpairs\" optional.\n\nWordPair Types:\n- WordPairInput:  Minimal data required for inserting/updating a wordpair.\n- WordPairSummary: A lightweight version of a wordpair (includes id, deckId, and the word values).\n- WordPairEntity:  Full representation of a wordpair including timestamps.",
 				"properties": {
 					"wordOriginal": {
 						"type": "string"
@@ -23,7 +24,7 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"GenerateDeckResponse": {
+			"LLMDeck": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -36,7 +37,7 @@
 					},
 					"wordpairs": {
 						"items": {
-							"$ref": "#/components/schemas/ShortWordPair"
+							"$ref": "#/components/schemas/WordPairInput"
 						},
 						"type": "array"
 					}
@@ -52,66 +53,29 @@
 			},
 			"GenerateDeckRequest": {
 				"properties": {
-					"prompt": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"prompt"
-				],
-				"type": "object",
-				"additionalProperties": true
-			},
-			"RefineDeckResponse": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
 					"languageFrom": {
 						"type": "string"
 					},
 					"languageTo": {
 						"type": "string"
 					},
-					"wordpairs": {
-						"items": {
-							"$ref": "#/components/schemas/ShortWordPair"
-						},
-						"type": "array"
+					"pairCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"theme": {
+						"type": "string"
+					},
+					"additionalPrompt": {
+						"type": "string"
 					}
 				},
 				"required": [
-					"name",
 					"languageFrom",
 					"languageTo",
-					"wordpairs"
-				],
-				"type": "object",
-				"additionalProperties": true
-			},
-			"ShortDeckWithWordPairs": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"languageFrom": {
-						"type": "string"
-					},
-					"languageTo": {
-						"type": "string"
-					},
-					"wordpairs": {
-						"items": {
-							"$ref": "#/components/schemas/ShortWordPair"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"name",
-					"languageFrom",
-					"languageTo",
-					"wordpairs"
+					"pairCount",
+					"theme",
+					"additionalPrompt"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -128,7 +92,7 @@
 						"type": "array"
 					},
 					"currentDeck": {
-						"$ref": "#/components/schemas/ShortDeckWithWordPairs"
+						"$ref": "#/components/schemas/LLMDeck"
 					}
 				},
 				"required": [
@@ -139,7 +103,8 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"GetAllDecksResponse": {
+			"DeckSummary": {
+				"description": "DeckSummary extends DeckEntity with the computed wordpairCount.\nThis type is ideal for list endpoints where a count is necessary.",
 				"properties": {
 					"id": {
 						"type": "number",
@@ -299,23 +264,6 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"WordPairInput": {
-				"description": "This file defines the types used for deck and wordpair interactions.\n\nNaming Conventions:\n-------------------\nDeck Types:\n- DeckCreateInput: Payload for deck insertion. Contains basic fields and an optional list of wordpairs.\n- DeckUpdateInput: Payload for updating a deck. Contains basic fields (without timestamps) and an optional wordpairs list.\n- DeckEntity:   Represents a deck as stored in the database.\n- DeckSummary:  Extends DeckEntity with the computed \"wordpairCount\". \n- DeckDetail:   Extends DeckSummary by including the full list of associated wordpairs.\n- DeckOptionalReturn: Similar to DeckDetail but with \"wordpairCount\" and \"wordpairs\" optional.\n\nWordPair Types:\n- WordPairInput:  Minimal data required for inserting/updating a wordpair.\n- WordPairSummary: A lightweight version of a wordpair (includes id, deckId, and the word values).\n- WordPairEntity:  Full representation of a wordpair including timestamps.",
-				"properties": {
-					"wordOriginal": {
-						"type": "string"
-					},
-					"wordTranslation": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"wordOriginal",
-					"wordTranslation"
-				],
-				"type": "object",
-				"additionalProperties": true
-			},
 			"DeckCreateInput": {
 				"properties": {
 					"name": {
@@ -374,6 +322,30 @@
 				],
 				"type": "object",
 				"additionalProperties": true
+			},
+			"WordPairUpdateInput": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"deckId": {
+						"type": "number",
+						"format": "double"
+					},
+					"wordOriginal": {
+						"type": "string"
+					},
+					"wordTranslation": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"wordOriginal",
+					"wordTranslation"
+				],
+				"type": "object",
+				"additionalProperties": true
 			}
 		},
 		"securitySchemes": {}
@@ -396,7 +368,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/GenerateDeckResponse"
+									"$ref": "#/components/schemas/LLMDeck"
 								}
 							}
 						}
@@ -428,7 +400,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/RefineDeckResponse"
+									"$ref": "#/components/schemas/LLMDeck"
 								}
 							}
 						}
@@ -461,7 +433,7 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/GetAllDecksResponse"
+										"$ref": "#/components/schemas/DeckSummary"
 									},
 									"type": "array"
 								}
@@ -728,20 +700,7 @@
 						"application/json": {
 							"schema": {
 								"items": {
-									"allOf": [
-										{
-											"properties": {
-												"id": {
-													"type": "number",
-													"format": "double"
-												}
-											},
-											"type": "object"
-										},
-										{
-											"$ref": "#/components/schemas/WordPairInput"
-										}
-									]
+									"$ref": "#/components/schemas/WordPairUpdateInput"
 								},
 								"type": "array"
 							}

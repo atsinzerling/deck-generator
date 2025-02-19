@@ -13,29 +13,16 @@ import {
 import { DeckService } from '../services/deck.service';
 import { LLMProvider } from '../services/llm/types';
 import { OpenAIProvider } from '../services/llm/openai';
-import { GENERATE_SYSTEM_PROMPT, REFINE_SYSTEM_PROMPT } from '../config/prompts';
-import { 
-  GenerateDeckResponse,
-  GenerateDeckRequest,
-  RefineDeckResponse,
-  RefineDeckRequest,
-  CreateDeckResponse,
-  CreateDeckRequest,
-  UpdateDeckResponse,
-  UpdateDeckRequest,
-  GetAllDecksResponse,
-  GetDeckWordpairsResponse,
-  GetDeckByIdResponse
-} from '../types/api';
-import { BadRequestError, NotFoundError, InternalServerError } from '../errors';
-import logger from '../utils/logger';
+import { GENERATE_SYSTEM_PROMPT, getGenerateDeckPrompt, getRefineDeckPrompt, REFINE_SYSTEM_PROMPT } from '../config/prompts';
+
+import { BadRequestError} from '../errors';
 import { parseLlmResponse } from '../utils/llm';
-import {
-  GenerateDeckRequestSchema,
-  RefineDeckRequestSchema,
-  CreateDeckRequestSchema,
-  UpdateDeckRequestSchema
-} from '../types/zodSchemas';
+// import {
+//   GenerateDeckRequestSchema,
+//   RefineDeckRequestSchema,
+//   CreateDeckRequestSchema,
+//   UpdateDeckRequestSchema
+// } from '../types/zodSchemas';
 
 import {
   DeckCreateInput,
@@ -43,13 +30,13 @@ import {
   DeckOptionalReturn,
   WordPairInput,
   WordPairEntity,
-  WordPairSummary,
+  DeckSummaryOptionalReturn,
   WordPairUpdateInput,
-  DeckEntity,
-  DeckDetail,
-  DeckSummary,
-  DeckSummaryOptionalReturn
-} from '../types/deck2';
+  LLMDeck,
+  GenerateDeckRequest,
+  RefineDeckRequest,
+  DeckSummary
+} from '../types/deck';
 
 
 @Route('decks')
@@ -74,21 +61,14 @@ export class DeckController extends Controller {
   @Post('generate')
   public async generateDeck(
     @Body() request: GenerateDeckRequest
-  ): Promise<GenerateDeckResponse> {
-      const parsedRequest = GenerateDeckRequestSchema.parse(request);
-      logger.info(`Generating deck with prompt: ${parsedRequest.prompt}`);
+  ): Promise<LLMDeck> {
+      // const parsedRequest = GenerateDeckRequestSchema.parse(request);
       
-      const llmPrompt = `Generate a deck for the following user prompt: ${parsedRequest.prompt}`;
-      logger.debug(`LLM Prompt: ${llmPrompt}`);
-
       const result = await this.llmProvider.generateCompletion(
         GENERATE_SYSTEM_PROMPT,
-        llmPrompt
+        getGenerateDeckPrompt(request.languageFrom, request.languageTo, request.pairCount, request.theme, request.additionalPrompt)
       );
-      const deck: GenerateDeckResponse = parseLlmResponse(result);
-
-      logger.info(`Deck generated successfully: ${deck.name}`);
-      logger.debug(`LLM Response: ${result}`);
+      const deck: LLMDeck = parseLlmResponse(result);
       
       return deck;
   }
@@ -96,25 +76,20 @@ export class DeckController extends Controller {
   @Post('refine')
   public async refineDeck(
     @Body() request: RefineDeckRequest
-  ): Promise<RefineDeckResponse> {
-      const parsedRequest = RefineDeckRequestSchema.parse(request);
-      logger.info(`Refining deck ${parsedRequest.currentDeck.name} with prompt: ${parsedRequest.prompt}`);
-      
-      const userPrompt = `Refine given deck given this data, conversation history and user refinement request. Current deck: ${JSON.stringify(parsedRequest.currentDeck)}\n\nConversation history: ${JSON.stringify(parsedRequest.history)}\n\nRefinement request: ${parsedRequest.prompt}`;
-      logger.debug(`LLM Refinement Prompt: ${userPrompt}`);
+  ): Promise<LLMDeck> {
+      // const parsedRequest = RefineDeckRequestSchema.parse(request);
 
-      const result = await this.llmProvider.generateCompletion(REFINE_SYSTEM_PROMPT, userPrompt);
-      const refinedDeck: RefineDeckResponse = JSON.parse(result);
-
-      logger.info(`Deck refined successfully: ${refinedDeck.name}`);
-      logger.debug(`LLM Refinement Response: ${result}`);
+      const result = await this.llmProvider.generateCompletion(
+        REFINE_SYSTEM_PROMPT, 
+        getRefineDeckPrompt(request.prompt, request.currentDeck, request.history)
+      );
+      const refinedDeck: LLMDeck = parseLlmResponse(result);
       
       return refinedDeck;
   }
 
   @Get('/')
-  public async getAllDecks(): Promise<GetAllDecksResponse[]> {
-      logger.info('Fetching all decks');
+  public async getAllDecks(): Promise<DeckSummary[]> {
       return await this.deckService.getAllDecks();
   }
 
@@ -127,8 +102,7 @@ export class DeckController extends Controller {
     @Path() deckId: number,
     @Query() includeWordpairs?: boolean
   ): Promise<DeckSummaryOptionalReturn> {
-      const deck = await this.deckService.getDeckById(deckId, includeWordpairs);
-      return deck;
+      return this.deckService.getDeckById(deckId, includeWordpairs);
   }
 
 
@@ -137,15 +111,7 @@ export class DeckController extends Controller {
     @Body() request: DeckCreateInput
   ): Promise<DeckOptionalReturn> {
       // const parsedRequest = CreateDeckRequestSchema.parse(request);
-      const parsedRequest = request;
-      logger.info(`Creating new deck: ${parsedRequest.name} from ${parsedRequest.languageFrom} to ${parsedRequest.languageTo}`);
-      
-      const deck = await this.deckService.createDeck(parsedRequest);
-      if (!deck) {
-        throw new InternalServerError('Failed to create deck');
-      }
-      logger.info(`Deck created successfully with ID: ${deck.id}`);
-      return deck;
+      return this.deckService.createDeck(request);
   }
 
   @Put('{deckId}')
@@ -157,38 +123,24 @@ export class DeckController extends Controller {
         throw new BadRequestError("deckId in path does not match id in body");
       }
       // const parsedRequest = UpdateDeckRequestSchema.parse(request);
-      const parsedRequest = request;
-      logger.info(`Updating deck ID: ${deckId} with name: ${parsedRequest.name}`);
-      
-      const deck = await this.deckService.updateDeck(parsedRequest);
-      if (!deck) {
-        throw new InternalServerError('Failed to update deck');
-      }
-      logger.info(`Deck updated successfully: ${deck.name}`);
-      return deck;
+      return this.deckService.updateDeck(request);
   }
 
   @Delete('{deckId}')
   public async deleteDeck(
     @Path() deckId: number
   ): Promise<void> {
-      logger.info(`Deleting deck ID: ${deckId}`);
       await this.deckService.deleteDeck(deckId);
   }
 
-  // New WordPair CRUD Endpoints
+  // WordPair CRUD Endpoints
 
 
   @Get('{deckId}/wordpairs')
   public async getDeckWordpairs(
     @Path() deckId: number
   ): Promise<WordPairEntity[]> {
-      logger.info(`Fetching wordpairs for deck ID: ${deckId}`);
-      const wordpairs = await this.deckService.getDeckWordpairs(deckId);
-      if (!wordpairs.length) {
-        throw new NotFoundError(`No wordpairs found for deckId ${deckId}`);
-      }
-      return wordpairs;
+      return this.deckService.getDeckWordpairs(deckId);
   }
 
   @Post('{deckId}/wordpairs')
@@ -196,26 +148,21 @@ export class DeckController extends Controller {
     @Path() deckId: number,
     @Body() wordpairs: WordPairInput[]
   ): Promise<WordPairEntity[]> {
-      logger.info(`Creating wordpairs for deck ID: ${deckId}`);
-      const newWordpairs = await this.deckService.createWordpairs(deckId, wordpairs);
-      return newWordpairs;
+      return this.deckService.createWordpairs(deckId, wordpairs);
   }
 
   @Put('{deckId}/wordpairs')
   public async updateWordpairs(
     @Path() deckId: number,
-    @Body() wordpairs: Array<{ id?: number } & WordPairInput>
+    @Body() wordpairs: Array<WordPairUpdateInput>
   ): Promise<WordPairEntity[]> {
-      logger.info(`Updating wordpairs for deck ID: ${deckId}`);
-      const updatedWordpairs = await this.deckService.updateWordpairs(deckId, wordpairs);
-      return updatedWordpairs;
+      return this.deckService.updateWordpairs(deckId, wordpairs);
   }
 
   @Delete('{deckId}/wordpairs')
   public async deleteWordpairs(
     @Path() deckId: number
   ): Promise<void> {
-      logger.info(`Deleting all wordpairs for deck ID: ${deckId}`);
       await this.deckService.deleteWordpairs(deckId);
   }
 } 
