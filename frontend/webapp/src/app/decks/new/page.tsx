@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { api } from "@/lib/api";
-import { ShortWordPair, ShortDeckWithWordPairs } from "@/types/decks";
-import { GenerateDeckRequest, RefineDeckRequest } from "@/types/api";
+import { LLMDeck, WordPairInput } from "@/types/decks";
+import { GenerateDeckRequest, RefineDeckRequest } from "@/types/decks";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
@@ -22,25 +22,26 @@ const NewDeck: React.FC = () => {
   const [theme, setTheme] = useState("");
   const [pairCount, setPairCount] = useState<number>(5);
   const [additionalPrompt, setAdditionalPrompt] = useState("");
-  const [wordPairs, setWordPairs] = useState<ShortWordPair[]>([]);
+  const [wordPairs, setWordPairs] = useState<WordPairInput[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isRefining, setIsRefining] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [deckName, setDeckName] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
   const router = useRouter();
 
-  const updateDeckDetails = (data: ShortDeckWithWordPairs) => {
+  const updateDeckDetails = (data: LLMDeck) => {
     setWordPairs(data.wordpairs);
 
     if (data.wordpairs.length > 0) {
       setPairCount(data.wordpairs.length);
     }
     
-    if (data.language_from) {
-      setFromLanguage(data.language_from);
+    if (data.languageFrom) {
+      setFromLanguage(data.languageFrom);
     }
-    if (data.language_to) {
-      setToLanguage(data.language_to);
+    if (data.languageTo) {
+      setToLanguage(data.languageTo);
     }
     
     if (data.name) {
@@ -58,14 +59,19 @@ const NewDeck: React.FC = () => {
     setError(null);
 
     const payload: GenerateDeckRequest = {
-      prompt: `Create a deck from ${fromLanguage} to ${toLanguage} with ${pairCount} word pairs on the topic/theme of ${theme}.${additionalPrompt ? ` Additional instructions: ${additionalPrompt}` : ''}`
+      languageFrom: fromLanguage,
+      languageTo: toLanguage,
+      pairCount: pairCount,
+      theme: theme,
+      additionalPrompt: additionalPrompt,
     };
 
-    const { data, error: apiError } = await api.decks.generate(payload);
+    const { data, error: apiError } = await api.decks.generateDeck(payload);
     if (apiError) {
       setError(apiError);
     } else if (data) {
       updateDeckDetails(data);
+      setHistory([...history, `generate request: languageFrom: ${fromLanguage} languageTo: ${toLanguage} pairCount: ${pairCount} topic/theme: ${theme}${additionalPrompt ? ` additional prompt: ${additionalPrompt}.` : '.'}`]);
     }
     setLoading(false);
   };
@@ -76,20 +82,21 @@ const NewDeck: React.FC = () => {
 
     const payload: RefineDeckRequest = {
       prompt: additionalPrompt,
-      history: [],
-      current_deck: ({
+      history: history,
+      currentDeck: ({
         name: deckName || theme,
-        language_from: fromLanguage,
-        language_to: toLanguage,
+        languageFrom: fromLanguage,
+        languageTo: toLanguage,
         wordpairs: wordPairs,
       }),
     };
 
-    const { data, error: apiError } = await api.decks.refine(payload);
+    const { data, error: apiError } = await api.decks.refineDeck(payload);
     if (apiError) {
       setError(apiError);
     } else if (data) {
       updateDeckDetails(data);
+      setHistory([...history, `refine request: ${additionalPrompt}`]); 
     }
     setLoading(false);
   };
@@ -100,15 +107,15 @@ const NewDeck: React.FC = () => {
 
     const payload = {
       name: deckName || `${theme} Deck`,
-      language_from: fromLanguage,
-      language_to: toLanguage,
+      languageFrom: fromLanguage,
+      languageTo: toLanguage,
       wordpairs: wordPairs.map((pair) => ({
-        word_original: pair.word_original,
-        word_translation: pair.word_translation,
+        wordOriginal: pair.wordOriginal,
+        wordTranslation: pair.wordTranslation,
       })),
     };
 
-    const { data, error: apiError } = await api.decks.create(payload);
+    const { data, error: apiError } = await api.decks.createDeck(payload);
     if (apiError) {
       setError(apiError);
     } else if (data) {

@@ -3,19 +3,19 @@ import React, { useEffect, useState } from "react";
 import DeckTile from "@/components/dashboard/DeckTile";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { Deck } from "@/types/decks";
+import { DeckSummary } from "@/types/decks";
 import NewDeckTile from "@/components/dashboard/NewDeckTile";
 import SkeletonDashboard from "@/components/dashboard/SkeletonDashboard";
 
 const Dashboard: React.FC = () => {
-  const [decks, setDecks] = useState<Deck[]>([]);
+  const [decks, setDecks] = useState<DeckSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchDecks = async () => {
-      const { data, error } = await api.decks.getAll();
+      const { data, error } = await api.decks.getAllDecks();
       if (error) {
         setError(error);
       } else if (data) {
@@ -52,10 +52,10 @@ const Dashboard: React.FC = () => {
               key={deck.id}
               id={Number(deck.id)}
               name={deck.name}
-              languageFrom={deck.language_from}
-              languageTo={deck.language_to}
-              cardCount={deck.wordpair_count || 0}
-              lastModified={deck.last_modified}
+              languageFrom={deck.languageFrom}
+              languageTo={deck.languageTo}
+              cardCount={deck.wordpairCount || 0}
+              lastModified={deck.lastModified}
               onClick={() => router.push(`/decks/${deck.id}`)}
                 />
               ))}

@@ -1,16 +1,16 @@
-import { 
-	CreateDeckRequest,
-	CreateDeckResponse,
-	UpdateDeckRequest,
-	UpdateDeckResponse,
-	GetAllDecksResponse,
-	GetDeckWordpairsResponse,
-	GetDeckByIdResponse,
-	GenerateDeckRequest,
-	GenerateDeckResponse,
-	RefineDeckRequest,
-	RefineDeckResponse
-  } from "@/types/api";
+import {
+  DeckCreateInput,
+  DeckUpdateInput,
+  DeckOptionalReturn,
+  WordPairInput,
+  WordPairEntity,
+  DeckSummaryOptionalReturn,
+  WordPairUpdateInput,
+  LLMDeck,
+  GenerateDeckRequest,
+  RefineDeckRequest,
+  DeckSummary
+} from '../types/decks';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -43,27 +43,38 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<A
 // Deck-related API functions
 export const api = {
   decks: {
-    getAll: () => apiRequest<GetAllDecksResponse[]>('/api/decks'),
-    getById: (deckId: string) => apiRequest<GetDeckByIdResponse>(`/api/decks/${deckId}`),
-    getWordPairs: (deckId: string) => apiRequest<GetDeckWordpairsResponse[]>(`/api/decks/${deckId}/wordpairs`),
-    create: (deck: CreateDeckRequest) => apiRequest<CreateDeckResponse>('/api/decks', {
+    getAllDecks: () => apiRequest<DeckSummary[]>('/api/decks'),
+    getDeckById: (deckId: string, includeWordpairs?: boolean) => 
+      apiRequest<DeckSummaryOptionalReturn>(`/api/decks/${deckId}${includeWordpairs ? '?includeWordpairs=true' : ''}`),
+    createDeck: (deck: DeckCreateInput) => apiRequest<DeckOptionalReturn>('/api/decks', {
       method: 'POST',
       body: JSON.stringify(deck),
     }),
-    update: (deckId: string, deck: UpdateDeckRequest) => apiRequest<UpdateDeckResponse>(`/api/decks/${deckId}`, {
+    updateDeck: (deck: DeckUpdateInput) => apiRequest<DeckOptionalReturn>(`/api/decks/${deck.id}`, {
       method: 'PUT',
       body: JSON.stringify(deck),
     }),
-    delete: (deckId: string) => apiRequest<void>(`/api/decks/${deckId}`, {
+    deleteDeck: (deckId: string) => apiRequest<void>(`/api/decks/${deckId}`, {
       method: 'DELETE',
     }),
-    generate: (prompt: GenerateDeckRequest) => apiRequest<GenerateDeckResponse>('/api/decks/generate', {
+
+    getWordpairs: (deckId: string) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`),
+    createWordpairs: (deckId: string, wordpairs: WordPairInput[]) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`, {
       method: 'POST',
-      body: JSON.stringify(prompt),
+      body: JSON.stringify(wordpairs),
     }),
-    refine: (prompt: RefineDeckRequest) => apiRequest<RefineDeckResponse>('/api/decks/refine', {
+    updateWordpairs: (deckId: string, wordpairs: WordPairUpdateInput[]) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`, {
+      method: 'PUT',
+      body: JSON.stringify(wordpairs),
+    }),
+    
+    generateDeck: (request: GenerateDeckRequest) => apiRequest<LLMDeck>('/api/decks/generate', {
       method: 'POST',
-      body: JSON.stringify(prompt),
+      body: JSON.stringify(request),
+    }),
+    refineDeck: (request: RefineDeckRequest) => apiRequest<LLMDeck>('/api/decks/refine', {
+      method: 'POST',
+      body: JSON.stringify(request),
     }),
   },
 }; 

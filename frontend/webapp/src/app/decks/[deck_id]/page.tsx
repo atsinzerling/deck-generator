@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { Deck, WordPair } from "@/types/decks";
+import { DeckDetail, WordPairEntity, WordPairUpdateInput } from "@/types/decks";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
@@ -21,14 +21,12 @@ import { formatDate } from "@/lib/dates";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
-  const router = useRouter();
   const deckId = params.deck_id as string;
-  const [deck, setDeck] = useState<Deck | null>(null);
-  const [wordPairs, setWordPairs] = useState<WordPair[]>([]);
+  const [deck, setDeck] = useState<DeckDetail | null>(null);
+  const [wordPairs, setWordPairs] = useState<WordPairUpdateInput[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // New state for design-specific features:
   const [isRefineOpen, setIsRefineOpen] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [privacy, setPrivacy] = useState("private");
@@ -37,22 +35,14 @@ const DeckPage: React.FC = () => {
 
   useEffect(() => {
     const fetchDeckData = async () => {
-      const { data: deckData, error: deckError } = await api.decks.getById(deckId);
+      const { data: deckData, error: deckError } = await api.decks.getDeckById(deckId, true);
       if (deckError) {
         setError(deckError);
         setLoading(false);
         return;
-      }
-
-      if (deckData) {
-        setDeck(deckData);
-        setEditedName(deckData.name); // update our local deck name state
-        const { data: wordPairsData, error: wordPairsError } = await api.decks.getWordPairs(deckId);
-        if (wordPairsError) {
-          setError(wordPairsError);
-        } else if (wordPairsData) {
-          setWordPairs(wordPairsData);
-        }
+      } else if (deckData) {
+        setDeck(deckData as DeckDetail);
+        setWordPairs(deckData.wordpairs as WordPairUpdateInput[]);
       }
       setLoading(false);
     };
@@ -80,24 +70,24 @@ const DeckPage: React.FC = () => {
     const payload = {
       prompt: refineText,
       history: [],
-      current_deck: {
+      currentDeck: {
         name: editedName,
-        language_from: deck.language_from,
-        language_to: deck.language_to,
+        languageFrom: deck.languageFrom,
+        languageTo: deck.languageTo,
         wordpairs: wordPairs.map((pair) => ({
-          word_original: pair.word_original,
-          word_translation: pair.word_translation,
+          wordOriginal: pair.wordOriginal,
+          wordTranslation: pair.wordTranslation,
         })),
       },
     };
 
-    const { data, error: refineError } = await api.decks.refine(payload);
+    const { data, error: refineError } = await api.decks.refineDeck(payload);
     if (refineError) {
       setError(refineError);
     } else if (data) {
       // update the word pairs and deck name based on refined data
       setWordPairs(data.wordpairs);
-      if (data.name) {
+      if (data.name) { // TODO: use name from the deck object, useful for saving functionality
         setDeck((prev) => (prev ? { ...prev, name: data.name } : prev));
         setEditedName(data.name);
       }
@@ -115,20 +105,21 @@ const DeckPage: React.FC = () => {
     const payload = {
       id: deck.id,
       name: editedName,
-      language_from: deck.language_from,
-      language_to: deck.language_to,
+      languageFrom: deck.languageFrom,
+      languageTo: deck.languageTo,
       wordpairs: wordPairs.map((pair) => ({
-        word_original: pair.word_original,
-        word_translation: pair.word_translation,
+        wordOriginal: pair.wordOriginal,
+        wordTranslation: pair.wordTranslation,
       })),
-    };
+    }; // TODO: use full wordpair objects when possible
 
-    const { data, error: updateError } = await api.decks.update(payload);
+    const { data, error: updateError } = await api.decks.updateDeck(payload);
     if (updateError) {
       setError(updateError);
     } else if (data) {
       // update the deck state based on the saved data
-      setDeck(data);
+      setDeck(data as DeckDetail);
+      setWordPairs(data.wordpairs as WordPairUpdateInput[]);
       setEditedName(data.name);
     }
     setLoading(false);
@@ -143,8 +134,8 @@ const DeckPage: React.FC = () => {
     setRefineText("");
   };
 
-  const formattedCreatedAt = deck ? formatDate(deck.created_at) : "";
-  const formattedModifiedAt = deck ? formatDate(deck.last_modified) : "";
+  const formattedCreatedAt = deck ? formatDate(deck.createdAt) : "";
+  const formattedModifiedAt = deck ? formatDate(deck.lastModified) : "";
 
   if (error) {
     return <div className="p-8 text-red-500">Error: {error}</div>;
@@ -190,7 +181,7 @@ const DeckPage: React.FC = () => {
                   {deck && (
                     <>
                       <p>
-                        From {deck.language_from} to {deck.language_to}
+                        From {deck.languageFrom} to {deck.languageTo}
                       </p>
                       <p>
                         Created on {formattedCreatedAt}
