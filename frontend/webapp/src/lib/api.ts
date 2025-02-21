@@ -54,7 +54,7 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<A
 export const api = {
   decks: {
     getAllDecks: () => apiRequest<DeckSummary[]>('/api/decks'),
-    getDeckById: (deckId: string, includeWordpairs?: boolean) => 
+    getDeckById: (deckId: number, includeWordpairs?: boolean) => 
       apiRequest<DeckSummaryOptionalReturn>(`/api/decks/${deckId}${includeWordpairs ? '?includeWordpairs=true' : ''}`),
     createDeck: (deck: DeckCreateInput) => apiRequest<DeckOptionalReturn>('/api/decks', {
       method: 'POST',
@@ -64,16 +64,16 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(deck),
     }),
-    deleteDeck: (deckId: string) => apiRequest<void>(`/api/decks/${deckId}`, {
+    deleteDeck: (deckId: number) => apiRequest<void>(`/api/decks/${deckId}`, {
       method: 'DELETE',
     }),
 
-    getWordpairs: (deckId: string) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`),
-    createWordpairs: (deckId: string, wordpairs: WordPairInput[]) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`, {
+    getWordpairs: (deckId: number) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`),
+    createWordpairs: (deckId: number, wordpairs: WordPairInput[]) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`, {
       method: 'POST',
       body: JSON.stringify(wordpairs),
     }),
-    updateWordpairs: (deckId: string, wordpairs: WordPairUpdateInput[]) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`, {
+    updateWordpairs: (deckId: number, wordpairs: WordPairUpdateInput[]) => apiRequest<WordPairEntity[]>(`/api/decks/${deckId}/wordpairs`, {
       method: 'PUT',
       body: JSON.stringify(wordpairs),
     }),

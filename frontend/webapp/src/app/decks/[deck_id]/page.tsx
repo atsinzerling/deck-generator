@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { DeckDetail, WordPairEntity, WordPairUpdateInput } from "@/types/decks";
+import { DeckSummary, WordPairEntity, WordPairUpdateInput } from "@/types/decks";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
@@ -15,15 +15,19 @@ import {
   faPlay,
   faSync,
   faChevronUp,
-  faChevronDown
+  faChevronDown,
+  faFileExport,
+  faTrashAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { formatDate } from "@/lib/dates";
 import toast from "react-hot-toast";
+import ExportModal from "@/components/ExportModal";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
-  const deckId = params.deck_id as string;
-  const [deck, setDeck] = useState<DeckDetail | null>(null);
+  const deckId = parseInt(params.deck_id as string);
+  const router = useRouter();
+  const [deck, setDeck] = useState<DeckSummary | null>(null);
   const [wordPairs, setWordPairs] = useState<WordPairUpdateInput[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -32,6 +36,8 @@ const DeckPage: React.FC = () => {
   const [privacy, setPrivacy] = useState("private");
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
     const fetchDeckData = async () => {
@@ -43,8 +49,8 @@ const DeckPage: React.FC = () => {
         setLoading(false);
         return;
       } else if (deckData) {
-        setDeck(deckData as DeckDetail);
         setWordPairs(deckData.wordpairs as WordPairUpdateInput[]);
+        setDeck(deckData as DeckSummary);
         setEditedName(deckData.name);
       }
       setLoading(false);
@@ -54,11 +60,19 @@ const DeckPage: React.FC = () => {
   }, [deckId]);
 
   const shuffleWordPairs = () => {
-    setWordPairs((prev) => [...prev].sort(() => Math.random() - 0.5));
+    setWordPairs((prev) => {
+      const shuffled = [...prev].sort(() => Math.random() - 0.5);
+      setIsEditing(true);
+      return shuffled;
+    });
   };
 
   const reverseWordPairs = () => {
-    setWordPairs((prev) => [...prev].reverse());
+    setWordPairs((prev) => {
+      const reversed = [...prev].reverse();
+      setIsEditing(true);
+      return reversed;
+    });
   };
 
   const handlePractice = () => {
@@ -106,6 +120,7 @@ const DeckPage: React.FC = () => {
         setEditedName(data.name);
       }
       toast.success("Deck refined successfully!");
+      setIsEditing(true);
     }
     setLoading(false);
     setIsRefineOpen(false);
@@ -135,10 +150,11 @@ const DeckPage: React.FC = () => {
           : updateError.error || "An unexpected error occurred.";
       toast.error(message);
     } else if (data) {
-      setDeck(data as DeckDetail);
       setWordPairs(data.wordpairs as WordPairUpdateInput[]);
+      setDeck(data as DeckSummary);
       setEditedName(data.name);
       toast.success("Deck saved successfully!");
+      setIsEditing(false);
     }
     setLoading(false);
   };
@@ -150,6 +166,21 @@ const DeckPage: React.FC = () => {
     }
     setIsRefineOpen(false);
     setRefineText("");
+    setIsEditing(false);
+  };
+
+  const handleDelete = async () => {
+    if (!deck) return;
+    setLoading(true);
+
+    const { error: deleteError } = await api.decks.deleteDeck(deck.id);
+    if (deleteError) {
+      toast.error("Failed to delete deck.");
+    } else {
+      toast.success("Deck deleted successfully!");
+      router.push("/decks");
+    }
+    setLoading(false);
   };
 
   const formattedCreatedAt = deck ? formatDate(deck.createdAt) : "";
@@ -167,7 +198,10 @@ const DeckPage: React.FC = () => {
                     <Input
                       type="text"
                       value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
+                      onChange={(e) => {
+                        setEditedName(e.target.value);
+                        setIsEditing(true);
+                      }}
                       className="bg-[#1a1a1a] border-gray-600"
                     />
                   ) : (
@@ -274,20 +308,39 @@ const DeckPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex gap-4 mt-6">
-              <Button
-                onClick={handleSave}
-                className="w-1/2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Save Changes
-              </Button>
-              <Button
-                onClick={handleCancel}
-                className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"
-              >
-                Cancel
-              </Button>
-            </div>
+            {isEditing ? (
+              <div className="flex gap-4 mt-6">
+                <Button
+                  onClick={handleSave}
+                  className="w-1/2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Save Changes
+                </Button>
+                <Button
+                  onClick={handleCancel}
+                  className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-8 space-y-3">
+                <Button
+                  onClick={() => setShowExportModal(true)}
+                  className="w-full px-4 py-3 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636] transition-colors flex items-center justify-center gap-2"
+                >
+                  <FontAwesomeIcon icon={faFileExport} className="h-4 w-4" />
+                  Export Deck
+                </Button>
+                <Button
+                  onClick={handleDelete}
+                  className="w-full px-4 py-3 bg-[#2f2f2f] text-red-500 rounded-lg hover:bg-[#3f2f2f] transition-colors border border-red-900/30 flex items-center justify-center gap-2 text-sm"
+                >
+                  <FontAwesomeIcon icon={faTrashAlt} className="h-4 w-4" />
+                  Delete Deck
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Right Panel: Word Pairs List */}
@@ -296,6 +349,12 @@ const DeckPage: React.FC = () => {
           </div>
         </div>
       </div>
+      {showExportModal && (
+        <ExportModal
+          wordPairs={wordPairs}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
     </div>
   );
 };

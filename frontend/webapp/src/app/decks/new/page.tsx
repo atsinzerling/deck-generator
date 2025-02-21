@@ -287,8 +287,7 @@ const NewDeck: React.FC = () => {
                     </Button>
                     <Button
                       onClick={() => {
-                        setWordPairs([]);
-                        setIsRefining(false);
+                        router.push("/decks");
                       }}
                       disabled={loading}
                       className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"
