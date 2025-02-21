@@ -70,3 +70,71 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+
+
+/* --- OverlayScrollbars custom styling ---
+   These rules mimic your original ScrollArea design:
+   - Vertical scrollbar width: 0.625rem (Tailwind's w-2.5)
+   - Horizontal scrollbar height: 0.625rem
+   - 1px padding on tracks
+   - Thumb background-color and rounded shape
+   - Smooth opacity transition
+-------------------------------------------------- */
+.os-scrollbar.os-scrollbar-vertical {
+  width: 0.625rem !important;
+  padding: 1px;
+}
+
+.os-scrollbar.os-scrollbar-horizontal {
+  height: 0.625rem !important;
+  padding: 1px;
+}
+
+.os-scrollbar-handle {
+  background-color: #cbd5e1 !important; /* Adjust to match your design (e.g. Tailwind's 'bg-border') */
+  border-radius: 9999px; /* rounded-full */
+  transition: opacity 200ms ease;
+}
+
+
+/* 
+  Custom Scrollbar Class
+  This mimics the design of your CustomScrollArea:
+  - Vertical/horizontal scrollbar size: 0.625rem
+  - 1px padding on the track
+  - Thumb with background-color #cbd5e1 and fully rounded corners
+  - Smooth transition on hover and opacity changes
+*/
+
+/* Apply these styles to textareas with the "custom-scrollbar" class */
+textarea.custom-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+}
+
+/* For Chrome, Safari, and Edge */
+textarea.custom-scrollbar::-webkit-scrollbar {
+  width: 0.625rem !important; /* 10px width */
+  height: 0.625rem !important;
+}
+
+textarea.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+  border-radius: 0.5rem !important; /* adjust if needed */
+}
+
+textarea.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+  border-radius: 9999px !important; /* fully rounded */
+  border: 2px solid transparent !important; /* gives that padded look */
+  background-clip: padding-box !important;
+}
+
+/* Optionally, hide the scrollbar buttons if any */
+textarea.custom-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

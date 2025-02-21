@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Textarea } from "@/components/ui/Textarea";
+import {Textarea} from "@/components/ui/Textarea";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTimes,

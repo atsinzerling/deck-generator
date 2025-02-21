@@ -7,7 +7,7 @@ import { LLMDeck, WordPairInput } from "@/types/decks";
 import { GenerateDeckRequest, RefineDeckRequest } from "@/types/decks";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Textarea } from "@/components/ui/Textarea";
+import {Textarea} from "@/components/ui/Textarea";
 import WordPairList from "@/components/WordPairList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 

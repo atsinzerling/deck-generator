@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollArea } from "@/components/ui/ScrollArea";
+import CustomScrollArea from "@/components/CustomScrollArea";
 import WordPairTile from "@/components/WordPairTile";
 import { WordPairUpdateInput } from "@/types/decks";
 import WordPairPlaceholder from "@/components/WordPairPlaceholder";
@@ -23,13 +23,13 @@ const WordPairList: React.FC<WordPairListProps> = ({
     <WordPairPlaceholder />
   ) : (
     <div className="flex-1 min-h-0">
-      <ScrollArea className="h-full">
+      <CustomScrollArea className="h-full">
         <div className="space-y-4 pr-4">
           {wordPairs.map((pair, index) => (
             <WordPairTile key={index} pair={pair} />
           ))}
         </div>
-      </ScrollArea>
+      </CustomScrollArea>
     </div>
   )}
       {loading && (
