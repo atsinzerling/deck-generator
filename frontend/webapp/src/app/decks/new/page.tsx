@@ -14,6 +14,7 @@ import {
   faSync,
   faMagicWandSparkles
 } from "@fortawesome/free-solid-svg-icons";
+import toast from "react-hot-toast";
 
 const NewDeck: React.FC = () => {
   const [fromLanguage, setFromLanguage] = useState("");
@@ -25,7 +26,6 @@ const NewDeck: React.FC = () => {
   const [wordPairs, setWordPairs] = useState<WordPairInput[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isRefining, setIsRefining] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [deckName, setDeckName] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const router = useRouter();
@@ -56,7 +56,6 @@ const NewDeck: React.FC = () => {
 
   const handleGenerate = async () => {
     setLoading(true);
-    setError(null);
 
     const payload: GenerateDeckRequest = {
       languageFrom: fromLanguage,
@@ -68,17 +67,35 @@ const NewDeck: React.FC = () => {
 
     const { data, error: apiError } = await api.decks.generateDeck(payload);
     if (apiError) {
-      setError(apiError);
+      let message = "";
+      if (
+        typeof apiError === "object" &&
+        apiError.errorType &&
+        (apiError.errorType === "LLMError" || apiError.errorType === "LLMParseError")
+      ) {
+        message = "An error occurred while generating a deck. Try again or change the prompt.";
+      } else {
+        message =
+          typeof apiError === "string"
+            ? apiError
+            : apiError.error || "An unexpected error occurred.";
+      }
+      toast.error(message);
     } else if (data) {
       updateDeckDetails(data);
-      setHistory([...history, `generate request: languageFrom: ${fromLanguage} languageTo: ${toLanguage} pairCount: ${pairCount} topic/theme: ${theme}${additionalPrompt ? ` additional prompt: ${additionalPrompt}.` : '.'}`]);
+      toast.success("Deck generated successfully!");
+      setHistory([
+        ...history,
+        `generate request: languageFrom: ${fromLanguage} languageTo: ${toLanguage} pairCount: ${pairCount} topic/theme: ${theme}${
+          additionalPrompt ? ` additional prompt: ${additionalPrompt}.` : "."
+        }`,
+      ]);
     }
     setLoading(false);
   };
 
   const handleRefine = async () => {
     setLoading(true);
-    setError(null);
 
     const payload: RefineDeckRequest = {
       prompt: additionalPrompt,
@@ -93,17 +110,30 @@ const NewDeck: React.FC = () => {
 
     const { data, error: apiError } = await api.decks.refineDeck(payload);
     if (apiError) {
-      setError(apiError);
+      let message = "";
+      if (
+        typeof apiError === "object" &&
+        apiError.errorType &&
+        (apiError.errorType === "LLMError" || apiError.errorType === "LLMParseError")
+      ) {
+        message = "An error occurred while generating a deck. Try again or change the prompt.";
+      } else {
+        message =
+          typeof apiError === "string"
+            ? apiError
+            : apiError.error || "An unexpected error occurred.";
+      }
+      toast.error(message);
     } else if (data) {
       updateDeckDetails(data);
-      setHistory([...history, `refine request: ${additionalPrompt}`]); 
+      toast.success("Deck refined successfully!");
+      setHistory([...history, `refine request: ${additionalPrompt}`]);
     }
     setLoading(false);
   };
 
   const handleSave = async () => {
     setLoading(true);
-    setError(null);
 
     const payload = {
       name: deckName || `${theme} Deck`,
@@ -117,8 +147,13 @@ const NewDeck: React.FC = () => {
 
     const { data, error: apiError } = await api.decks.createDeck(payload);
     if (apiError) {
-      setError(apiError);
+      let message =
+        typeof apiError === "string"
+          ? apiError
+          : apiError.error || "An unexpected error occurred.";
+      toast.error(message);
     } else if (data) {
+      toast.success("Deck saved successfully!");
       router.push(`/decks/${data.id}`);
     }
     setLoading(false);
@@ -131,8 +166,6 @@ const NewDeck: React.FC = () => {
           <div className="w-full md:w-1/2 bg-[#242424] rounded-xl p-6">
             <h1 className="text-3xl font-bold mb-8">Create New Deck</h1>
             <div className="space-y-6">
-              {error && <div className="text-red-500">{error}</div>}
-              
               <div className="flex gap-4">
                 <div className="w-1/2 space-y-2">
                   <label className="block text-sm font-medium">From Language</label>

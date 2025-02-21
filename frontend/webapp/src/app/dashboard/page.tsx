@@ -6,18 +6,20 @@ import { api } from "@/lib/api";
 import { DeckSummary } from "@/types/decks";
 import NewDeckTile from "@/components/dashboard/NewDeckTile";
 import SkeletonDashboard from "@/components/dashboard/SkeletonDashboard";
+import toast from "react-hot-toast";
 
 const Dashboard: React.FC = () => {
   const [decks, setDecks] = useState<DeckSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchDecks = async () => {
       const { data, error } = await api.decks.getAllDecks();
       if (error) {
-        setError(error);
+        toast.error(
+          typeof error === "string" ? error : error.error || "Failed to fetch decks."
+        );
       } else if (data) {
         setDecks(data);
       }
@@ -30,11 +32,6 @@ const Dashboard: React.FC = () => {
   const handleNewDeck = () => {
     router.push("/decks/new");
   };
-
-  if (error) {
-    return <div className="p-8 text-red-500">Error: {error}</div>;
-  }
-
 
   return (
     <div className="min-h-screen w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">

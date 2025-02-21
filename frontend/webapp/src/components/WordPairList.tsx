@@ -1,12 +1,12 @@
 import React from 'react';
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import WordPairTile from "@/components/WordPairTile";
-import { ShortWordPair } from "@/types/decks";
+import { WordPairUpdateInput } from "@/types/decks";
 import WordPairPlaceholder from "@/components/WordPairPlaceholder";
 import { Circles } from 'react-loader-spinner';
 
 interface WordPairListProps {
-  wordPairs: ShortWordPair[];
+  wordPairs: WordPairUpdateInput[];
   title?: string;
   loading?: boolean;
 }

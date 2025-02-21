@@ -18,6 +18,7 @@ import {
   faChevronDown
 } from "@fortawesome/free-solid-svg-icons";
 import { formatDate } from "@/lib/dates";
+import toast from "react-hot-toast";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
@@ -25,7 +26,6 @@ const DeckPage: React.FC = () => {
   const [deck, setDeck] = useState<DeckDetail | null>(null);
   const [wordPairs, setWordPairs] = useState<WordPairUpdateInput[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [isRefineOpen, setIsRefineOpen] = useState(false);
   const [refineText, setRefineText] = useState("");
@@ -37,12 +37,15 @@ const DeckPage: React.FC = () => {
     const fetchDeckData = async () => {
       const { data: deckData, error: deckError } = await api.decks.getDeckById(deckId, true);
       if (deckError) {
-        setError(deckError);
+        toast.error(
+          typeof deckError === "string" ? deckError : deckError.error || "Failed to fetch deck data."
+        );
         setLoading(false);
         return;
       } else if (deckData) {
         setDeck(deckData as DeckDetail);
         setWordPairs(deckData.wordpairs as WordPairUpdateInput[]);
+        setEditedName(deckData.name);
       }
       setLoading(false);
     };
@@ -65,7 +68,6 @@ const DeckPage: React.FC = () => {
   const handleRefine = async () => {
     if (!deck) return;
     setLoading(true);
-    setError(null);
 
     const payload = {
       prompt: refineText,
@@ -83,14 +85,27 @@ const DeckPage: React.FC = () => {
 
     const { data, error: refineError } = await api.decks.refineDeck(payload);
     if (refineError) {
-      setError(refineError);
+      let message = "";
+      if (
+        typeof refineError === "object" &&
+        refineError.errorType &&
+        (refineError.errorType === "LLMError" || refineError.errorType === "LLMParseError")
+      ) {
+        message = "An error occurred while generating a deck. Try again or change the prompt.";
+      } else {
+        message =
+          typeof refineError === "string"
+            ? refineError
+            : refineError.error || "An unexpected error occurred.";
+      }
+      toast.error(message);
     } else if (data) {
-      // update the word pairs and deck name based on refined data
       setWordPairs(data.wordpairs);
-      if (data.name) { // TODO: use name from the deck object, useful for saving functionality
+      if (data.name) {
         setDeck((prev) => (prev ? { ...prev, name: data.name } : prev));
         setEditedName(data.name);
       }
+      toast.success("Deck refined successfully!");
     }
     setLoading(false);
     setIsRefineOpen(false);
@@ -100,7 +115,6 @@ const DeckPage: React.FC = () => {
   const handleSave = async () => {
     if (!deck) return;
     setLoading(true);
-    setError(null);
 
     const payload = {
       id: deck.id,
@@ -115,12 +129,16 @@ const DeckPage: React.FC = () => {
 
     const { data, error: updateError } = await api.decks.updateDeck(payload);
     if (updateError) {
-      setError(updateError);
+      let message =
+        typeof updateError === "string"
+          ? updateError
+          : updateError.error || "An unexpected error occurred.";
+      toast.error(message);
     } else if (data) {
-      // update the deck state based on the saved data
       setDeck(data as DeckDetail);
       setWordPairs(data.wordpairs as WordPairUpdateInput[]);
       setEditedName(data.name);
+      toast.success("Deck saved successfully!");
     }
     setLoading(false);
   };
@@ -136,10 +154,6 @@ const DeckPage: React.FC = () => {
 
   const formattedCreatedAt = deck ? formatDate(deck.createdAt) : "";
   const formattedModifiedAt = deck ? formatDate(deck.lastModified) : "";
-
-  if (error) {
-    return <div className="p-8 text-red-500">Error: {error}</div>;
-  }
 
   return (
     <div className="min-h-screen w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">

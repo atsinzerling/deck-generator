@@ -14,9 +14,16 @@ import {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-interface ApiResponse<T> {
+// Define an interface for structured error returned from the backend
+export interface ApiError {
+  error: string;
+  errorType?: string;
+}
+
+// Now allow the error prop to be either a string or ApiError object.
+export interface ApiResponse<T> {
   data?: T;
-  error?: string;
+  error?: string | ApiError;
 }
 
 async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
@@ -29,11 +36,14 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<A
       ...options,
     });
 
+    // Attempt to parse the response body as JSON
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+      // Return the error JSON (which may include errorType) if available
+      return { error: data || `API request failed: ${response.statusText}` };
     }
 
-    const data = await response.json();
     return { data };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Unknown error' };
