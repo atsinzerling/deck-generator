@@ -9,19 +9,19 @@ import {
   faFileCsv,
   faCopy,
   faDownload,
+  faFileExport,
 } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
 import { DeckSummary, WordPairUpdateInput } from "@/types/decks";
 import { downloadFile } from "@/lib/utils";
-import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/Dialog";
+import { Dialog, DialogContent, DialogTitle, DialogClose, DialogTrigger } from "@/components/ui/Dialog";
 
 interface ExportModalProps {
   wordPairs: WordPairUpdateInput[];
   deck: DeckSummary;
-  onClose: () => void;
 }
 
-const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck, onClose }) => {
+const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck }) => {
   const [termSeparator, setTermSeparator] = useState("tab");
   const [rowSeparator, setRowSeparator] = useState("newline");
   const [customTermSeparator, setCustomTermSeparator] = useState(" - ");
@@ -79,16 +79,25 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck, onClose }) =
   };
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="bg-[#242424] border-0 rounded-xl p-6 w-full max-w-2xl mx-4 hide-default-close">
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          className="w-full px-4 py-3 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636] transition-colors flex items-center justify-center gap-2"
+        >
+          {/* <FontAwesomeIcon icon={faFileExport} className="h-4 w-4" /> */}
+          Export Deck
+        </Button>
+        
+      </DialogTrigger>
+      <DialogContent className="bg-[#242424] border-0 rounded-xl p-6 w-full max-w-2xl mx-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
           <DialogTitle className="text-xl font-bold text-white">Export</DialogTitle>
-          <DialogClose asChild>
+          <DialogTrigger asChild>
             <Button variant="ghost" size="icon">
               <FontAwesomeIcon icon={faTimes} className="h-4 w-4 text-white hover:text-white" />
             </Button>
-          </DialogClose>
+          </DialogTrigger>
         </div>
 
         {/* Export Options */}
@@ -244,11 +253,6 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck, onClose }) =
           />
         </div>
       </DialogContent>
-      <style jsx global>{`
-        .hide-default-close [data-radix-dialog-close] {
-          display: none !important;
-        }
-      `}</style>
     </Dialog>
   );
 };

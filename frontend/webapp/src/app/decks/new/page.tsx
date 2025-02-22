@@ -17,18 +17,23 @@ import {
 import toast from "react-hot-toast";
 
 const NewDeck: React.FC = () => {
+  const [deckName, setDeckName] = useState("");
   const [fromLanguage, setFromLanguage] = useState("");
   const [toLanguage, setToLanguage] = useState("");
   const [proficiency, setProficiency] = useState("");
   const [theme, setTheme] = useState("");
   const [pairCount, setPairCount] = useState<number>(5);
-  const [additionalPrompt, setAdditionalPrompt] = useState("");
-  const [wordPairs, setWordPairs] = useState<WordPairInput[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [isRefining, setIsRefining] = useState<boolean>(false);
-  const [deckName, setDeckName] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+
+  const [additionalPrompt, setAdditionalPrompt] = useState("");
+
+  const [wordPairs, setWordPairs] = useState<WordPairInput[]>([]);
+
+  const [refineStage, setRefineStage] = useState<boolean>(false);
+  const [generating, setGenerating] = useState<boolean>(false);
+
   const router = useRouter();
+
 
   const updateDeckDetails = (data: LLMDeck) => {
     setWordPairs(data.wordpairs);
@@ -51,11 +56,11 @@ const NewDeck: React.FC = () => {
       }
     }
     
-    setIsRefining(true);
+    setRefineStage(true);
   };
 
   const handleGenerate = async () => {
-    setLoading(true);
+    setGenerating(true);
 
     const payload: GenerateDeckRequest = {
       languageFrom: fromLanguage,
@@ -91,11 +96,11 @@ const NewDeck: React.FC = () => {
         }`,
       ]);
     }
-    setLoading(false);
+    setGenerating(false);
   };
 
   const handleRefine = async () => {
-    setLoading(true);
+    setGenerating(true);
 
     const payload: RefineDeckRequest = {
       prompt: additionalPrompt,
@@ -129,11 +134,11 @@ const NewDeck: React.FC = () => {
       toast.success("Deck refined successfully!");
       setHistory([...history, `refine request: ${additionalPrompt}`]);
     }
-    setLoading(false);
+    setGenerating(false);
   };
 
   const handleSave = async () => {
-    setLoading(true);
+    setGenerating(true)
 
     const payload = {
       name: deckName || `${theme} Deck`,
@@ -156,7 +161,7 @@ const NewDeck: React.FC = () => {
       toast.success("Deck saved successfully!");
       router.push(`/decks/${data.id}`);
     }
-    setLoading(false);
+    setGenerating(false);
   };
 
   return (
@@ -175,7 +180,7 @@ const NewDeck: React.FC = () => {
                     placeholder="e.g., English"
                     value={fromLanguage}
                     onChange={(e) => setFromLanguage(e.target.value)}
-                    disabled={isRefining}
+                    disabled={refineStage || generating}
                     className="bg-[#1a1a1a] border-gray-600"
                   />
                 </div>
@@ -188,7 +193,7 @@ const NewDeck: React.FC = () => {
                     placeholder="Your proficiency level"
                     value={proficiency}
                     onChange={(e) => setProficiency(e.target.value)}
-                    disabled={isRefining}
+                    disabled={refineStage || generating}
                     className="bg-[#1a1a1a] border-gray-600"
                   />
                 </div>
@@ -203,7 +208,7 @@ const NewDeck: React.FC = () => {
                     placeholder="e.g., Spanish"
                     value={toLanguage}
                     onChange={(e) => setToLanguage(e.target.value)}
-                    disabled={isRefining}
+                    disabled={refineStage || generating}
                     className="bg-[#1a1a1a] border-gray-600"
                   />
                 </div>
@@ -219,7 +224,7 @@ const NewDeck: React.FC = () => {
                       const val = e.target.value;
                       setPairCount(val === '' ? 0 : parseInt(val, 10));
                     }}
-                    disabled={isRefining}
+                    disabled={refineStage || generating}
                     className="bg-[#1a1a1a] border-gray-600"
                   />
                 </div>
@@ -233,12 +238,12 @@ const NewDeck: React.FC = () => {
                   placeholder="e.g., Business, Travel, Food"
                   value={theme}
                   onChange={(e) => setTheme(e.target.value)}
-                  disabled={isRefining}
+                  disabled={refineStage || generating}
                   className="bg-[#1a1a1a] border-gray-600"
                 />
               </div>
 
-              {isRefining && (
+              {refineStage && (
                 <div className="space-y-2">
                   <label className="block text-sm font-medium">Deck Name</label>
                   <Input
@@ -253,10 +258,10 @@ const NewDeck: React.FC = () => {
               )}
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium">{ isRefining ? "Refine Instructions" : "Additional Instructions"}</label>
+                <label className="block text-sm font-medium">{ refineStage ? "Refine Instructions" : "Additional Instructions"}</label>
                 <Textarea
                   name="additionalPrompt"
-                  placeholder={isRefining ? "How would you want to refine the deck?" : "Any specific requirements or focus areas..."}
+                  placeholder={refineStage ? "How would you want to refine the deck?" : "Any specific requirements or focus areas..."}
                   value={additionalPrompt}
                   onChange={(e) => setAdditionalPrompt(e.target.value)}
                   className="bg-[#1a1a1a] border-gray-600 h-24 resize-none"
@@ -265,22 +270,22 @@ const NewDeck: React.FC = () => {
 
               <div className="space-y-4">
                 <Button
-                  onClick={isRefining ? handleRefine : handleGenerate}
-                  disabled={loading}
+                  onClick={refineStage ? handleRefine : handleGenerate}
+                  disabled={generating}
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white"
                 >
                   <FontAwesomeIcon 
-                    icon={isRefining ? faSync : faMagicWandSparkles} 
+                    icon={refineStage ? faSync : faMagicWandSparkles} 
                     className="h-4 w-4" 
                   />
-                  {isRefining ? "Refine Word Pairs" : "Generate Word Pairs"}
+                  {refineStage ? "Refine Word Pairs" : "Generate Word Pairs"}
                 </Button>
 
                 {wordPairs.length > 0 && (
                   <div className="flex gap-4">
                     <Button
                       onClick={handleSave}
-                      disabled={loading}
+                      disabled={generating}
                       className="w-1/2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                     >
                       Save Changes
@@ -289,7 +294,7 @@ const NewDeck: React.FC = () => {
                       onClick={() => {
                         router.push("/decks");
                       }}
-                      disabled={loading}
+                      disabled={generating}
                       className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"
                     >
                       Cancel
@@ -303,7 +308,9 @@ const NewDeck: React.FC = () => {
           <div className="w-full md:w-1/2">
             <WordPairList 
               wordPairs={wordPairs}
-              loading={loading}
+              generating={generating}
+              emptyMessage1="Generated word pairs will appear here"
+              emptyMessage2="Fill in the form and click Generate to create your custom language learning deck"
             />
           </div>
         </div>

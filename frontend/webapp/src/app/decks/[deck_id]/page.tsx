@@ -2,13 +2,17 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { DeckSummary, WordPairEntity, WordPairUpdateInput } from "@/types/decks";
+import {
+  DeckSummary,
+  WordPairEntity,
+  WordPairUpdateInput,
+} from "@/types/decks";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import WordPairList from "@/components/WordPairList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
+import {
   faPencil,
   faRandom,
   faExchangeAlt,
@@ -17,34 +21,42 @@ import {
   faChevronUp,
   faChevronDown,
   faFileExport,
-  faTrashAlt
+  faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatDate } from "@/lib/dates";
 import toast from "react-hot-toast";
 import ExportModal from "@/components/ExportModal";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import DeckSkeleton from "@/components/DeckSkeleton";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
   const deckId = parseInt(params.deck_id as string);
-  const router = useRouter();
   const [deck, setDeck] = useState<DeckSummary | null>(null);
   const [wordPairs, setWordPairs] = useState<WordPairUpdateInput[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  const [isRefineOpen, setIsRefineOpen] = useState(false);
+  const [editedName, setEditedName] = useState("");
   const [refineText, setRefineText] = useState("");
   const [privacy, setPrivacy] = useState("private");
+
   const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // for save/cancel displayal
+  const [isRefineOpen, setIsRefineOpen] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [generating, setGenerating] = useState<boolean>(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchDeckData = async () => {
-      const { data: deckData, error: deckError } = await api.decks.getDeckById(deckId, true);
+      const { data: deckData, error: deckError } = await api.decks.getDeckById(
+        deckId,
+        true
+      );
       if (deckError) {
         toast.error(
-          typeof deckError === "string" ? deckError : deckError.error || "Failed to fetch deck data."
+          typeof deckError === "string"
+            ? deckError
+            : deckError.error || "Failed to fetch deck data."
         );
         setLoading(false);
         return;
@@ -81,7 +93,7 @@ const DeckPage: React.FC = () => {
 
   const handleRefine = async () => {
     if (!deck) return;
-    setLoading(true);
+    setGenerating(true);
 
     const payload = {
       prompt: refineText,
@@ -103,9 +115,11 @@ const DeckPage: React.FC = () => {
       if (
         typeof refineError === "object" &&
         refineError.errorType &&
-        (refineError.errorType === "LLMError" || refineError.errorType === "LLMParseError")
+        (refineError.errorType === "LLMError" ||
+          refineError.errorType === "LLMParseError")
       ) {
-        message = "An error occurred while generating a deck. Try again or change the prompt.";
+        message =
+          "An error occurred while generating a deck. Try again or change the prompt.";
       } else {
         message =
           typeof refineError === "string"
@@ -120,10 +134,11 @@ const DeckPage: React.FC = () => {
         setEditedName(data.name);
       }
       toast.success("Deck refined successfully!");
+      // updating languages and deck name later
       setIsEditing(true);
     }
-    setLoading(false);
-    setIsRefineOpen(false);
+    setGenerating(false);
+    // setIsRefineOpen(false);
     setRefineText("");
   };
 
@@ -174,11 +189,12 @@ const DeckPage: React.FC = () => {
     setLoading(true);
 
     const { error: deleteError } = await api.decks.deleteDeck(deck.id);
+    console.log(deleteError);
     if (deleteError) {
       toast.error("Failed to delete deck.");
     } else {
       toast.success("Deck deleted successfully!");
-      router.push("/decks");
+      router.push("/dashboard");
     }
     setLoading(false);
   };
@@ -192,8 +208,11 @@ const DeckPage: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left Panel: Deck information and actions */}
           <div className="w-full md:w-1/2 bg-[#242424] rounded-xl p-6">
-            
-            <div className="flex items-center gap-3 mb-6">
+            {loading ? (
+              <DeckSkeleton />
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-6">
                   {isEditingName ? (
                     <Input
                       type="text"
@@ -202,162 +221,166 @@ const DeckPage: React.FC = () => {
                         setEditedName(e.target.value);
                         setIsEditing(true);
                       }}
-                      className="bg-[#1a1a1a] border-gray-600"
+                      className="bg-[#1a1a1a] border-gray-600 text-lg md:text-lg"
                     />
                   ) : (
                     <h1 className="text-3xl font-bold">{editedName}</h1>
                   )}
-                  <Button variant="ghost" size="icon" onClick={() => setIsEditingName(!isEditingName)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsEditingName(!isEditingName)}
+                  >
                     <FontAwesomeIcon icon={faPencil} className="h-4 w-4" />
                   </Button>
                 </div>
-            
-            <div className="flex justify-between items-start mb-6">
-              <div className="space-y-4">
-                
-                <div className="flex items-center gap-2">
-                  <select
-                    value={privacy}
-                    onChange={(e) => setPrivacy(e.target.value)}
-                    className="bg-[#1a1a1a] border border-gray-600 rounded-lg px-2 py-1 text-gray-200 text-sm"
-                  >
-                    <option value="private">Private</option>
-                    <option value="public">Public</option>
-                  </select>
-                </div>
-                <div className="text-sm text-gray-400">
-                  {deck && (
-                    <>
-                      <p>
-                        From {deck.languageFrom} to {deck.languageTo}
-                      </p>
-                      <p>
-                        Created on {formattedCreatedAt}
-                      </p>
-                      {formattedCreatedAt !== formattedModifiedAt && (
-                        <p>
-                          Modified on {formattedModifiedAt}
-                        </p>
+
+                <div className="flex justify-between items-start mb-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={privacy}
+                        onChange={(e) => setPrivacy(e.target.value)}
+                        className="bg-[#1a1a1a] border border-gray-600 rounded-lg px-2 py-1 text-gray-200 text-sm"
+                      >
+                        <option value="private">Private</option>
+                        <option value="public">Public</option>
+                      </select>
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      {deck && (
+                        <>
+                          <p>
+                            From {deck.languageFrom} to {deck.languageTo}
+                          </p>
+                          <p>Created on {formattedCreatedAt}</p>
+                          {formattedCreatedAt !== formattedModifiedAt && (
+                            <p>Modified on {formattedModifiedAt}</p>
+                          )}
+                        </>
                       )}
-                    </>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={shuffleWordPairs}
+                        className="flex-1 inline-flex items-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
+                      >
+                        <FontAwesomeIcon icon={faRandom} className="h-4 w-4" />
+                        Shuffle
+                      </Button>
+                      <Button
+                        onClick={reverseWordPairs}
+                        className="flex-1 inline-flex items-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
+                      >
+                        <FontAwesomeIcon
+                          icon={faExchangeAlt}
+                          className="h-4 w-4"
+                        />
+                        Reverse
+                      </Button>
+                    </div>
+                    <Button
+                      onClick={handlePractice}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white"
+                    >
+                      <FontAwesomeIcon icon={faPlay} className="h-4 w-4" />
+                      Practice
+                    </Button>
+                    <Button
+                      onClick={handlePractice}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
+                    >
+                      Practice Shuffled
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-8 border border-gray-700 rounded-lg p-4">
+                  <button
+                    className="flex items-center justify-between w-full text-left"
+                    onClick={() => setIsRefineOpen(!isRefineOpen)}
+                  >
+                    <span className="text-md font-medium">Refine Deck</span>
+                    <FontAwesomeIcon
+                      icon={isRefineOpen ? faChevronUp : faChevronDown}
+                      className="h-4 w-4"
+                    />
+                  </button>
+                  {isRefineOpen && (
+                    <div className="mt-4 space-y-4">
+                      <Textarea
+                        name="refine"
+                        placeholder="Enter refinement instructions..."
+                        value={refineText}
+                        onChange={(e) => setRefineText(e.target.value)}
+                        className="w-full bg-[#1a1a1a] border border-gray-600 rounded-lg px-4 py-2 h-24 resize-none"
+                      />
+                      <Button
+                        onClick={handleRefine}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white w-full justify-center"
+                      >
+                        <FontAwesomeIcon icon={faSync} className="h-4 w-4" />
+                        Refine
+                      </Button>
+                    </div>
                   )}
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Button
-                    onClick={shuffleWordPairs}
-                    className="flex-1 inline-flex items-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
-                  >
-                    <FontAwesomeIcon icon={faRandom} className="h-4 w-4" />
-                    Shuffle
-                  </Button>
-                  <Button
-                    onClick={reverseWordPairs}
-                    className="flex-1 inline-flex items-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
-                  >
-                    <FontAwesomeIcon icon={faExchangeAlt} className="h-4 w-4" />
-                    Reverse
-                  </Button>
-                </div>
-                <Button
-                  onClick={handlePractice}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white"
-                >
-                  <FontAwesomeIcon icon={faPlay} className="h-4 w-4" />
-                  Practice
-                </Button>
-                <Button
-                  onClick={handlePractice}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
-                >
-                  Practice Shuffled
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-8 border border-gray-700 rounded-lg p-4">
-              <button
-                className="flex items-center justify-between w-full text-left"
-                onClick={() => setIsRefineOpen(!isRefineOpen)}
-              >
-                <span className="text-md font-medium">Refine Deck</span>
-                <FontAwesomeIcon 
-                  icon={isRefineOpen ? faChevronUp : faChevronDown} 
-                  className="h-4 w-4" 
-                />
-              </button>
-              {isRefineOpen && (
-                <div className="mt-4 space-y-4">
-                  <Textarea
-                    name="refine"
-                    placeholder="Enter refinement instructions..."
-                    value={refineText}
-                    onChange={(e) => setRefineText(e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-gray-600 rounded-lg px-4 py-2 h-24 resize-none"
-                  />
-                  <Button
-                    onClick={handleRefine}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white w-full justify-center"
-                  >
-                    <FontAwesomeIcon icon={faSync} className="h-4 w-4" />
-                    Refine
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {isEditing ? (
-              <div className="flex gap-4 mt-6">
-                <Button
-                  onClick={handleSave}
-                  className="w-1/2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  Save Changes
-                </Button>
-                <Button
-                  onClick={handleCancel}
-                  className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <div className="mt-8 space-y-3">
-                <Button
-                  onClick={() => setShowExportModal(true)}
-                  className="w-full px-4 py-3 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636] transition-colors flex items-center justify-center gap-2"
-                >
-                  <FontAwesomeIcon icon={faFileExport} className="h-4 w-4" />
-                  Export Deck
-                </Button>
-                <Button
-                  onClick={handleDelete}
-                  className="w-full px-4 py-3 bg-[#2f2f2f] text-red-500 rounded-lg hover:bg-[#3f2f2f] transition-colors border border-red-900/30 flex items-center justify-center gap-2 text-sm"
-                >
-                  {/* <FontAwesomeIcon icon={faTrashAlt} className="h-4 w-4" /> */}
-                  Delete Deck
-                </Button>
-              </div>
+                {isEditing ? (
+                  <div className="flex gap-4 mt-6">
+                    <Button
+                      onClick={handleSave}
+                      className="w-1/2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
+                      Save Changes
+                    </Button>
+                    <Button
+                      onClick={handleCancel}
+                      className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-8 space-y-3">
+                    <ExportModal
+                      wordPairs={wordPairs}
+                      deck={deck as DeckSummary}
+                    />
+                    <ConfirmDialog
+                      title="Confirm Deletion"
+                      description="Are you sure you want to delete this deck? This action cannot be undone."
+                      onConfirm={handleDelete}
+                      confirmButtonText="Delete"
+                      cancelButtonText="Cancel"
+                    >
+                      <Button className="w-full px-4 py-3 bg-[#2f2f2f] text-red-500 rounded-lg hover:bg-[#3f2f2f] transition-colors border border-red-900/30 flex items-center justify-center gap-2 text-sm">
+                        {/* <FontAwesomeIcon icon={faTrashAlt} className="h-4 w-4" /> */}
+                        Delete Deck
+                      </Button>
+                    </ConfirmDialog>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {/* Right Panel: Word Pairs List */}
           <div className="w-full md:w-1/2">
-            <WordPairList wordPairs={wordPairs} loading={loading} />
+            <WordPairList
+              wordPairs={wordPairs}
+              loading={loading}
+              emptyMessage1="It looks like you haven't added any word pairs yet. "
+              emptyMessage2="Add some to get started!"
+            />
           </div>
         </div>
       </div>
-      {showExportModal && (
-        <ExportModal
-          wordPairs={wordPairs}
-          deck={deck as DeckSummary}
-          onClose={() => setShowExportModal(false)}
-        />
-      )}
     </div>
   );
 };
 
-export default DeckPage; 
+export default DeckPage;

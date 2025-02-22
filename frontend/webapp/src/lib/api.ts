@@ -36,11 +36,15 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<A
       ...options,
     });
 
-    // Attempt to parse the response body as JSON
-    const data = await response.json();
+    // If the response has a 204 status (No Content) or no content at all, return an empty object.
+    if (response.status === 204) {
+      return { data: {} as T };
+    }
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
 
     if (!response.ok) {
-      // Return the error JSON (which may include errorType) if available
       return { error: data || `API request failed: ${response.statusText}` };
     }
 
