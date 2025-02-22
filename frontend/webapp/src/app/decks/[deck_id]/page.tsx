@@ -297,13 +297,6 @@ const DeckPage: React.FC = () => {
                     onChange={(e) => setRefineText(e.target.value)}
                     className="w-full bg-[#1a1a1a] border border-gray-600 rounded-lg px-4 py-2 h-24 resize-none"
                   />
-                  <textarea
-                    name="refine2"
-                    placeholder="Enter refinement instructions..."
-                    value={refineText}
-                    onChange={(e) => setRefineText(e.target.value)}
-                    className="custom-scrollbar"
-                  />
                   <Button
                     onClick={handleRefine}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white w-full justify-center"
@@ -359,6 +352,7 @@ const DeckPage: React.FC = () => {
       {showExportModal && (
         <ExportModal
           wordPairs={wordPairs}
+          deck={deck as DeckSummary}
           onClose={() => setShowExportModal(false)}
         />
       )}

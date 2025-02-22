@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import {Textarea} from "@/components/ui/Textarea";
+import { Textarea } from "@/components/ui/Textarea";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTimes,
@@ -11,18 +11,17 @@ import {
   faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
-
-interface WordPair {
-  wordOriginal: string;
-  wordTranslation: string;
-}
+import { DeckSummary, WordPairUpdateInput } from "@/types/decks";
+import { downloadFile } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/Dialog";
 
 interface ExportModalProps {
-  wordPairs: WordPair[];
+  wordPairs: WordPairUpdateInput[];
+  deck: DeckSummary;
   onClose: () => void;
 }
 
-const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
+const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck, onClose }) => {
   const [termSeparator, setTermSeparator] = useState("tab");
   const [rowSeparator, setRowSeparator] = useState("newline");
   const [customTermSeparator, setCustomTermSeparator] = useState(" - ");
@@ -46,30 +45,30 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
       .join(rowSep);
   };
 
-  const downloadFile = (dataStr: string, fileName: string, mimeType: string) => {
-    const a = document.createElement("a");
-    a.setAttribute("href", `data:${mimeType};charset=utf-8,` + encodeURIComponent(dataStr));
-    a.setAttribute("download", fileName);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
   const downloadAsJson = () => {
-    const dataStr = JSON.stringify(wordPairs, null, 2);
-    downloadFile(dataStr, "deck.json", "text/json");
+    const dataStr = JSON.stringify(
+      {
+        name: deck.name,
+        languageFrom: deck.languageFrom,
+        languageTo: deck.languageTo,
+        wordPairs: wordPairs,
+      },
+      null,
+      2
+    );
+    downloadFile(dataStr, `${deck.name} - export.json`, "text/json");
   };
 
   const downloadAsCsv = () => {
-    const csvContent = wordPairs
-      .map((pair) => `${pair.wordOriginal},${pair.wordTranslation}`)
-      .join("\n");
-    downloadFile(csvContent, "deck.csv", "text/csv");
+    const csvContent =
+      `${deck.languageFrom},${deck.languageTo}\n` +
+      wordPairs.map((pair) => `${pair.wordOriginal},${pair.wordTranslation}`).join("\n");
+    downloadFile(csvContent, `${deck.name} - export.csv`, "text/csv");
   };
 
   const downloadAsText = () => {
     const textContent = getExportText();
-    downloadFile(textContent, "deck.txt", "text/plain");
+    downloadFile(textContent, `${deck.name} - export.txt`, "text/plain");
   };
 
   const copyToClipboard = () => {
@@ -80,18 +79,20 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-[#242424] rounded-xl p-6 w-full max-w-2xl mx-4">
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="bg-[#242424] border-0 rounded-xl p-6 w-full max-w-2xl mx-4 hide-default-close">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-white">Export</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <FontAwesomeIcon icon={faTimes} className="h-4 w-4 text-gray-400 hover:text-white" />
-          </Button>
+        <div className="flex justify-between items-center mb-3">
+          <DialogTitle className="text-xl font-bold text-white">Export</DialogTitle>
+          <DialogClose asChild>
+            <Button variant="ghost" size="icon">
+              <FontAwesomeIcon icon={faTimes} className="h-4 w-4 text-white hover:text-white" />
+            </Button>
+          </DialogClose>
         </div>
 
         {/* Export Options */}
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-3 mb-3">
           <Button
             onClick={downloadAsJson}
             className="flex-1 px-4 py-2.5 bg-[#2f2f2f] rounded-lg hover:bg-[#363636] flex items-center justify-center gap-2"
@@ -108,10 +109,10 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
           </Button>
         </div>
 
-        <div className="text-center text-gray-400 my-4">or</div>
+        <div className="text-center text-gray-300 my-0.5 text-lg">or</div>
 
         {/* Term Separator Options */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-3 mb-3">
           <h3 className="text-sm font-medium text-gray-300">Term separator</h3>
           <div className="flex gap-3">
             <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
@@ -126,7 +127,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
               <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
                 {termSeparator === "tab" && <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />}
               </div>
-              <span className="text-sm text-gray-200">Tab</span>
+              <span className="text-sm text-white">Tab</span>
             </label>
             <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
               <input
@@ -140,7 +141,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
               <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
                 {termSeparator === "comma" && <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />}
               </div>
-              <span className="text-sm text-gray-200">Comma</span>
+              <span className="text-sm text-white">Comma</span>
             </label>
             <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
               <input
@@ -162,14 +163,14 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
                   setTermSeparator("custom");
                   setCustomTermSeparator(e.target.value);
                 }}
-                className="bg-transparent border-b border-gray-600 w-20 text-sm focus:outline-none focus:border-gray-400"
+                className="bg-transparent border-b border-gray-600 w-20 text-sm text-white placeholder-white focus:outline-none focus:border-gray-400"
               />
             </label>
           </div>
         </div>
 
         {/* Row Separator Options */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-3 mb-3">
           <h3 className="text-sm font-medium text-gray-300">Row separator</h3>
           <div className="flex gap-3">
             <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
@@ -184,7 +185,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
               <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
                 {rowSeparator === "newline" && <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />}
               </div>
-              <span className="text-sm text-gray-200">New line</span>
+              <span className="text-sm text-white">New line</span>
             </label>
             <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
               <input
@@ -198,7 +199,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
               <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
                 {rowSeparator === "semicolon" && <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />}
               </div>
-              <span className="text-sm text-gray-200">Semicolon</span>
+              <span className="text-sm text-white">Semicolon</span>
             </label>
             <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
               <input
@@ -220,7 +221,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
                   setRowSeparator("custom");
                   setCustomRowSeparator(e.target.value);
                 }}
-                className="bg-transparent border-b border-gray-600 w-20 text-sm focus:outline-none focus:border-gray-400"
+                className="bg-transparent border-b border-gray-600 w-20 text-sm text-white placeholder-white focus:outline-none focus:border-gray-400"
               />
             </label>
           </div>
@@ -228,23 +229,28 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, onClose }) => {
 
         {/* Export Text Area and Actions */}
         <div className="relative">
-          <div className="absolute top-2 right-2 flex gap-2">
+          <div className="absolute top-3 right-4 flex gap-3">
             <Button variant="ghost" size="icon" onClick={copyToClipboard}>
-              <FontAwesomeIcon icon={faCopy} className="h-4 w-4" />
+              <FontAwesomeIcon icon={faCopy} className="h-4 w-4 text-gray-400" />
             </Button>
             <Button variant="ghost" size="icon" onClick={downloadAsText}>
-              <FontAwesomeIcon icon={faDownload} className="h-4 w-4" />
+              <FontAwesomeIcon icon={faDownload} className="h-4 w-4 text-gray-400" />
             </Button>
           </div>
           <Textarea
-            className="w-full h-48 bg-[#1a1a1a] rounded-lg p-4 font-mono text-sm resize-none focus:outline-none"
+            className="w-full h-48 bg-[#1a1a1a] border border-gray-600 rounded-lg p-4 font-mono text-sm text-gray-400 resize-none focus:outline-none"
             readOnly
             value={getExportText()}
           />
         </div>
-      </div>
-    </div>
+      </DialogContent>
+      <style jsx global>{`
+        .hide-default-close [data-radix-dialog-close] {
+          display: none !important;
+        }
+      `}</style>
+    </Dialog>
   );
 };
 
-export default ExportModal; 
+export default ExportModal;

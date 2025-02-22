@@ -25,7 +25,7 @@ const DeckTile: React.FC<DeckTileProps> = ({
   return (
     <Card 
       onClick={onClick} 
-      className="cursor-pointer hover:bg-[#2f2f2f] transition-colors duration-200 bg-[#242424] text-gray-200"
+      className="cursor-pointer hover:bg-[#2f2f2f] transition-colors duration-200 bg-[#242424] text-gray-200 border-[#404040]"
     >
       <CardHeader>
         <div className="flex justify-between items-start">
