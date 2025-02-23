@@ -124,3 +124,10 @@ export interface RefineDeckRequest {
   history: string[];
   currentDeck: LLMDeck;
 } 
+
+export interface apiSuccessResponse<T> {
+  success: boolean;
+  data: T;
+}
+
+

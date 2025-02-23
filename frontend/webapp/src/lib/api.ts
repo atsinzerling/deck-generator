@@ -14,16 +14,16 @@ import {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-// Define an interface for structured error returned from the backend
 export interface ApiError {
-  error: string;
-  errorType?: string;
+  message: string;
+  code: number;
+  type?: string;
 }
 
-// Now allow the error prop to be either a string or ApiError object.
 export interface ApiResponse<T> {
+  success: boolean;
   data?: T;
-  error?: string | ApiError;
+  error?: ApiError;
 }
 
 async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
@@ -36,21 +36,13 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<A
       ...options,
     });
 
-    // If the response has a 204 status (No Content) or no content at all, return an empty object.
-    if (response.status === 204) {
-      return { data: {} as T };
-    }
-
     const text = await response.text();
     const data = text ? JSON.parse(text) : {};
 
-    if (!response.ok) {
-      return { error: data || `API request failed: ${response.statusText}` };
-    }
-
-    return { data };
+    return data as ApiResponse<T>;
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error('API request failed', error);
+    return { success: false, error: { message: 'Unknown error', code: 500 } };
   }
 }
 

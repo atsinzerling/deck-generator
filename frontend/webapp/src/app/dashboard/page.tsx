@@ -15,11 +15,9 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchDecks = async () => {
-      const { data, error } = await api.decks.getAllDecks();
-      if (error) {
-        toast.error(
-          typeof error === "string" ? error : error.error || "Failed to fetch decks."
-        );
+      const { success, data, error } = await api.decks.getAllDecks();
+      if (!success) {
+        toast.error("Failed to fetch decks.");
       } else if (data) {
         setDecks(data);
       }

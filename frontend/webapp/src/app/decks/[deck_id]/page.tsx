@@ -28,6 +28,7 @@ import toast from "react-hot-toast";
 import ExportModal from "@/components/ExportModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import DeckSkeleton from "@/components/DeckSkeleton";
+import { countdownRedirect } from "@/components/countdownRedirect";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
@@ -45,20 +46,21 @@ const DeckPage: React.FC = () => {
   const [generating, setGenerating] = useState<boolean>(false);
 
   const router = useRouter();
+  const {startCountdownRedirect} = countdownRedirect();
 
   useEffect(() => {
     const fetchDeckData = async () => {
-      const { data: deckData, error: deckError } = await api.decks.getDeckById(
+      setLoading(true);
+      const { success, data: deckData, error: deckError } = await api.decks.getDeckById(
         deckId,
         true
       );
-      if (deckError) {
-        toast.error(
-          typeof deckError === "string"
-            ? deckError
-            : deckError.error || "Failed to fetch deck data."
-        );
-        setLoading(false);
+      if (!success) {
+        // if (deckError?.code === 404) { router.push("/notfound"); return; }
+        startCountdownRedirect({
+          message: "Failed to fetch deck data.",
+          redirectPath: "/dashboard",
+        });
         return;
       } else if (deckData) {
         setWordPairs(deckData.wordpairs as WordPairUpdateInput[]);
@@ -109,22 +111,14 @@ const DeckPage: React.FC = () => {
       },
     };
 
-    const { data, error: refineError } = await api.decks.refineDeck(payload);
-    if (refineError) {
-      let message = "";
-      if (
-        typeof refineError === "object" &&
-        refineError.errorType &&
-        (refineError.errorType === "LLMError" ||
-          refineError.errorType === "LLMParseError")
+    const { success, data, error: refineError } = await api.decks.refineDeck(payload);
+    if (!success) {
+      let message = "Failed to refine deck.";
+      if ((refineError?.type === "LLMError" ||
+          refineError?.type === "LLMParseError")
       ) {
         message =
           "An error occurred while generating a deck. Try again or change the prompt.";
-      } else {
-        message =
-          typeof refineError === "string"
-            ? refineError
-            : refineError.error || "An unexpected error occurred.";
       }
       toast.error(message);
     } else if (data) {
@@ -157,13 +151,9 @@ const DeckPage: React.FC = () => {
       })),
     }; // TODO: use full wordpair objects when possible
 
-    const { data, error: updateError } = await api.decks.updateDeck(payload);
-    if (updateError) {
-      let message =
-        typeof updateError === "string"
-          ? updateError
-          : updateError.error || "An unexpected error occurred.";
-      toast.error(message);
+    const { success, data, error: updateError } = await api.decks.updateDeck(payload);
+    if (!success) {
+      toast.error("Failed to save deck.");
     } else if (data) {
       setWordPairs(data.wordpairs as WordPairUpdateInput[]);
       setDeck(data as DeckSummary);

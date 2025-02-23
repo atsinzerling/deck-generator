@@ -35,8 +35,16 @@ import {
   LLMDeck,
   GenerateDeckRequest,
   RefineDeckRequest,
-  DeckSummary
+  DeckSummary,
+  apiSuccessResponse
 } from '../types/deck';
+
+function successResponse<T>(data: T): apiSuccessResponse<T> {
+  return {
+    success: true,
+    data: data
+  };
+}
 
 
 @Route('decks')
@@ -61,7 +69,7 @@ export class DeckController extends Controller {
   @Post('generate')
   public async generateDeck(
     @Body() request: GenerateDeckRequest
-  ): Promise<LLMDeck> {
+  ): Promise<apiSuccessResponse<LLMDeck>> {
       // const parsedRequest = GenerateDeckRequestSchema.parse(request);
       
       const result = await this.llmProvider.generateCompletion(
@@ -70,13 +78,13 @@ export class DeckController extends Controller {
       );
       const deck: LLMDeck = parseLlmResponse(result);
       
-      return deck;
+      return successResponse(deck);
   }
 
   @Post('refine')
   public async refineDeck(
     @Body() request: RefineDeckRequest
-  ): Promise<LLMDeck> {
+  ): Promise<apiSuccessResponse<LLMDeck>> {
       // const parsedRequest = RefineDeckRequestSchema.parse(request);
 
       const result = await this.llmProvider.generateCompletion(
@@ -85,12 +93,12 @@ export class DeckController extends Controller {
       );
       const refinedDeck: LLMDeck = parseLlmResponse(result);
       
-      return refinedDeck;
+      return successResponse(refinedDeck);
   }
 
   @Get('/')
-  public async getAllDecks(): Promise<DeckSummary[]> {
-      return await this.deckService.getAllDecks();
+  public async getAllDecks(): Promise<apiSuccessResponse<DeckSummary[]>> {
+      return successResponse(await this.deckService.getAllDecks());
   }
 
   /**
@@ -101,36 +109,37 @@ export class DeckController extends Controller {
   public async getDeckById(
     @Path() deckId: number,
     @Query() includeWordpairs?: boolean
-  ): Promise<DeckSummaryOptionalReturn> {
-      return this.deckService.getDeckById(deckId, includeWordpairs);
+  ): Promise<apiSuccessResponse<DeckSummaryOptionalReturn>> {
+      return successResponse(await this.deckService.getDeckById(deckId, includeWordpairs));
   }
 
 
   @Post('/')
   public async createDeck(
     @Body() request: DeckCreateInput
-  ): Promise<DeckOptionalReturn> {
+  ): Promise<apiSuccessResponse<DeckOptionalReturn>> {
       // const parsedRequest = CreateDeckRequestSchema.parse(request);
-      return this.deckService.createDeck(request);
+      return successResponse(await this.deckService.createDeck(request));
   }
 
   @Put('{deckId}')
   public async updateDeck(
     @Path() deckId: number,
     @Body() request: DeckUpdateInput
-  ): Promise<DeckOptionalReturn> {
+  ): Promise<apiSuccessResponse<DeckOptionalReturn>> {
       if (deckId !== request.id) {
         throw new BadRequestError("deckId in path does not match id in body");
       }
       // const parsedRequest = UpdateDeckRequestSchema.parse(request);
-      return this.deckService.updateDeck(request);
+      return successResponse(await this.deckService.updateDeck(request));
   }
 
   @Delete('{deckId}')
   public async deleteDeck(
     @Path() deckId: number
-  ): Promise<void> {
+  ): Promise<apiSuccessResponse<null>> {
       await this.deckService.deleteDeck(deckId);
+      return successResponse(null);
   }
 
   // WordPair CRUD Endpoints
@@ -139,30 +148,31 @@ export class DeckController extends Controller {
   @Get('{deckId}/wordpairs')
   public async getDeckWordpairs(
     @Path() deckId: number
-  ): Promise<WordPairEntity[]> {
-      return this.deckService.getDeckWordpairs(deckId);
+  ): Promise<apiSuccessResponse<WordPairEntity[]>> {
+      return successResponse(await this.deckService.getDeckWordpairs(deckId));
   }
 
   @Post('{deckId}/wordpairs')
   public async createWordpairs(
     @Path() deckId: number,
     @Body() wordpairs: WordPairInput[]
-  ): Promise<WordPairEntity[]> {
-      return this.deckService.createWordpairs(deckId, wordpairs);
+  ): Promise<apiSuccessResponse<WordPairEntity[]>> {
+      return successResponse(await this.deckService.createWordpairs(deckId, wordpairs));
   }
 
   @Put('{deckId}/wordpairs')
   public async updateWordpairs(
     @Path() deckId: number,
     @Body() wordpairs: Array<WordPairUpdateInput>
-  ): Promise<WordPairEntity[]> {
-      return this.deckService.updateWordpairs(deckId, wordpairs);
+  ): Promise<apiSuccessResponse<WordPairEntity[]>> {
+      return successResponse(await this.deckService.updateWordpairs(deckId, wordpairs));
   }
 
   @Delete('{deckId}/wordpairs')
   public async deleteWordpairs(
     @Path() deckId: number
-  ): Promise<void> {
+  ): Promise<apiSuccessResponse<null>> {
       await this.deckService.deleteWordpairs(deckId);
+      return successResponse(null);
   }
 } 

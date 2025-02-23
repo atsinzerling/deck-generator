@@ -69,7 +69,7 @@ export class DeckService {
       .select()
       .from(wordpairs)
       .where(eq(wordpairs.deckId, deckId))
-      .orderBy(asc(wordpairs.lastModified));
+      .orderBy(asc(wordpairs.lastModified)); // is there need to be an error if deck id does not exist?
 
     return wordPairs;
   }
