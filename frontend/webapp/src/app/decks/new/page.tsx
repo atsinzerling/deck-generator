@@ -1,14 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import { api } from "@/lib/api";
 import { LLMDeck, WordPairInput } from "@/types/decks";
 import { GenerateDeckRequest, RefineDeckRequest } from "@/types/decks";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
-import WordPairList from "@/components/WordPairList";
+import WordPairList from "@/components/newpage/WordPairList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSync, faMagicWandSparkles } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";

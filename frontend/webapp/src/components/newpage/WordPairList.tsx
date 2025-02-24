@@ -1,9 +1,9 @@
 import React from "react";
 import CustomScrollArea from "@/components/CustomScrollArea";
-import WordPairTile from "@/components/WordPairTile";
+import WordPairTile from "@/components/newpage/WordPairTile";
 import { WordPairUpdateInput } from "@/types/decks";
 import { Circles } from "react-loader-spinner";
-import WordPairListSkeleton from "@/components/WordPairListSkeleton";
+import WordPairListSkeleton from "@/components/newpage/WordPairListSkeleton";
 
 interface WordPairListProps {
   wordPairs: WordPairUpdateInput[];

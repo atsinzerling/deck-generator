@@ -1,16 +1,16 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import isEqual from "lodash.isequal";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   DeckSummary,
-  WordPairEntity,
   WordPairUpdateInput,
 } from "@/types/decks";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
-import WordPairList from "@/components/WordPairList";
+import WordPairList from "@/components/newpage/WordPairList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPencil,
@@ -25,22 +25,24 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { formatDate } from "@/lib/dates";
 import toast from "react-hot-toast";
-import ExportModal from "@/components/ExportModal";
-import ConfirmDialog from "@/components/ConfirmDialog";
-import DeckSkeleton from "@/components/DeckSkeleton";
-import { countdownRedirect } from "@/components/countdownRedirect";
+import ExportModal from "@/components/deckpage/ExportModal";
+import ConfirmDialog from "@/components/deckpage/ConfirmDialog";
+import DeckSkeleton from "@/components/deckpage/DeckSkeleton";
+import { countdownRedirect } from "@/components/deckpage/countdownRedirect";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
   const deckId = parseInt(params.deck_id as string);
-  const [deck, setDeck] = useState<DeckSummary | null>(null);
-  const [wordPairs, setWordPairs] = useState<WordPairUpdateInput[]>([]);
+  const [originalDeck, setOriginalDeck] = useState<DeckSummary | null>(null);
+  const [draftDeck, setDraftDeck] = useState<DeckSummary | null>(null);
+  const [originalWordPairs, setOriginalWordPairs] = useState<WordPairUpdateInput[]>([]);
+  const [draftWordPairs, setDraftWordPairs] = useState<WordPairUpdateInput[]>([]);
   const [editedName, setEditedName] = useState("");
   const [refineText, setRefineText] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
   const [privacy, setPrivacy] = useState("private");
 
   const [isEditingName, setIsEditingName] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // for save/cancel displayal
   const [isRefineOpen, setIsRefineOpen] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [generating, setGenerating] = useState<boolean>(false);
@@ -63,8 +65,10 @@ const DeckPage: React.FC = () => {
         });
         return;
       } else if (deckData) {
-        setWordPairs(deckData.wordpairs as WordPairUpdateInput[]);
-        setDeck(deckData as DeckSummary);
+        setOriginalWordPairs(deckData.wordpairs as WordPairUpdateInput[]);
+        setDraftWordPairs(deckData.wordpairs as WordPairUpdateInput[]);
+        setOriginalDeck(deckData as DeckSummary);
+        setDraftDeck(deckData as DeckSummary);
         setEditedName(deckData.name);
       }
       setLoading(false);
@@ -74,19 +78,22 @@ const DeckPage: React.FC = () => {
   }, [deckId]);
 
   const shuffleWordPairs = () => {
-    setWordPairs((prev) => {
+    setDraftWordPairs((prev) => {
       const shuffled = [...prev].sort(() => Math.random() - 0.5);
-      setIsEditing(true);
       return shuffled;
     });
   };
 
   const reverseWordPairs = () => {
-    setWordPairs((prev) => {
-      const reversed = [...prev].reverse();
-      setIsEditing(true);
+    setDraftWordPairs((prev) => {
+      const reversed = [...prev].map((pair) => ({
+        ...pair,
+        wordOriginal: pair.wordTranslation,
+        wordTranslation: pair.wordOriginal,
+      }));
       return reversed;
     });
+    setDraftDeck({ ...draftDeck!, languageFrom: draftDeck!.languageTo, languageTo: draftDeck!.languageFrom });
   };
 
   const handlePractice = () => {
@@ -94,17 +101,17 @@ const DeckPage: React.FC = () => {
   };
 
   const handleRefine = async () => {
-    if (!deck) return;
+    if (!draftDeck) return;
     setGenerating(true);
 
     const payload = {
       prompt: refineText,
-      history: [],
+      history: history,
       currentDeck: {
-        name: editedName,
-        languageFrom: deck.languageFrom,
-        languageTo: deck.languageTo,
-        wordpairs: wordPairs.map((pair) => ({
+        name: draftDeck.name,
+        languageFrom: draftDeck.languageFrom,
+        languageTo: draftDeck.languageTo,
+        wordpairs: draftWordPairs.map((pair) => ({
           wordOriginal: pair.wordOriginal,
           wordTranslation: pair.wordTranslation,
         })),
@@ -122,63 +129,63 @@ const DeckPage: React.FC = () => {
       }
       toast.error(message);
     } else if (data) {
-      setWordPairs(data.wordpairs);
-      if (data.name) {
-        setDeck((prev) => (prev ? { ...prev, name: data.name } : prev));
-        setEditedName(data.name);
-      }
+      setDraftWordPairs(data.wordpairs);
+        // setDraftDeck((prev) => (prev ? { ...prev, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo } as DeckSummary : prev));
+      setDraftDeck({ ...draftDeck, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo });
+      setDraftWordPairs(data.wordpairs);
+      setEditedName(data.name);
+      setHistory([...history, refineText]);
       toast.success("Deck refined successfully!");
       // updating languages and deck name later
-      setIsEditing(true);
     }
     setGenerating(false);
     // setIsRefineOpen(false);
-    setRefineText("");
+    setRefineText(""); // should that be turned off?
   };
 
   const handleSave = async () => {
-    if (!deck) return;
+    if (!draftDeck) return;
     setLoading(true);
 
     const payload = {
-      id: deck.id,
-      name: editedName,
-      languageFrom: deck.languageFrom,
-      languageTo: deck.languageTo,
-      wordpairs: wordPairs.map((pair) => ({
-        wordOriginal: pair.wordOriginal,
-        wordTranslation: pair.wordTranslation,
-      })),
-    }; // TODO: use full wordpair objects when possible
+      id: draftDeck.id,
+      name: draftDeck.name,
+      languageFrom: draftDeck.languageFrom,
+      languageTo: draftDeck.languageTo,
+      wordpairs: draftWordPairs,
+    };
 
     const { success, data, error: updateError } = await api.decks.updateDeck(payload);
     if (!success) {
       toast.error("Failed to save deck.");
     } else if (data) {
-      setWordPairs(data.wordpairs as WordPairUpdateInput[]);
-      setDeck(data as DeckSummary);
+      setOriginalWordPairs(data.wordpairs as WordPairUpdateInput[]);
+      setOriginalDeck(data as DeckSummary);
+      setDraftWordPairs(data.wordpairs as WordPairUpdateInput[]);
+      setDraftDeck(data as DeckSummary);
       setEditedName(data.name);
       toast.success("Deck saved successfully!");
-      setIsEditing(false);
     }
     setLoading(false);
   };
 
   const handleCancel = () => {
     // Reset any unsaved changes
-    if (deck) {
-      setEditedName(deck.name);
+    if (originalDeck) {
+      setEditedName(originalDeck.name);
+      setDraftWordPairs(originalWordPairs);
+      setDraftDeck(originalDeck);
+      setHistory([]);
     }
-    setIsRefineOpen(false);
-    setRefineText("");
-    setIsEditing(false);
+    // setIsRefineOpen(false);
+    // setRefineText("");
   };
 
   const handleDelete = async () => {
-    if (!deck) return;
+    if (!originalDeck) return;
     setLoading(true);
 
-    const { error: deleteError } = await api.decks.deleteDeck(deck.id);
+    const { error: deleteError } = await api.decks.deleteDeck(originalDeck.id);
     console.log(deleteError);
     if (deleteError) {
       toast.error("Failed to delete deck.");
@@ -189,8 +196,22 @@ const DeckPage: React.FC = () => {
     setLoading(false);
   };
 
-  const formattedCreatedAt = deck ? formatDate(deck.createdAt) : "";
-  const formattedModifiedAt = deck ? formatDate(deck.lastModified) : "";
+  const formattedCreatedAt = draftDeck ? formatDate(draftDeck.createdAt) : "";
+  const formattedModifiedAt = draftDeck ? formatDate(draftDeck.lastModified) : "";
+
+  const isEditing = useMemo(() => {
+    if (!originalDeck || !draftDeck) return false;
+    
+    const deckInfoChanged =
+      originalDeck.name !== draftDeck.name ||
+      originalDeck.languageFrom !== draftDeck.languageFrom ||
+      originalDeck.languageTo !== draftDeck.languageTo ||
+      originalDeck.wordpairCount !== draftDeck.wordpairCount;
+    
+    const wordPairsChanged = !isEqual(originalWordPairs, draftWordPairs);
+    
+    return deckInfoChanged || wordPairsChanged;
+  }, [originalDeck, draftDeck, originalWordPairs, draftWordPairs]);
 
   return (
     <div className="min-h-screen w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
@@ -206,10 +227,17 @@ const DeckPage: React.FC = () => {
                   {isEditingName ? (
                     <Input
                       type="text"
+                      autoFocus
                       value={editedName}
                       onChange={(e) => {
                         setEditedName(e.target.value);
-                        setIsEditing(true);
+                        setDraftDeck({ ...draftDeck!, name: e.target.value });
+                      }}
+                      onBlur={() => setIsEditingName(false)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === "Escape") {
+                          setIsEditingName(false);
+                        }
                       }}
                       className="bg-[#1a1a1a] border-gray-600 text-lg md:text-lg"
                     />
@@ -231,17 +259,19 @@ const DeckPage: React.FC = () => {
                       <select
                         value={privacy}
                         onChange={(e) => setPrivacy(e.target.value)}
-                        className="bg-[#1a1a1a] border border-gray-600 rounded-lg px-2 py-1 text-gray-200 text-sm"
+                        disabled
+                        title="Visibility settings coming soon"
+                        className="bg-[#1a1a1a] border border-gray-600 rounded-lg px-2 py-1 text-gray-200 text-sm opacity-50 cursor-not-allowed"
                       >
                         <option value="private">Private</option>
                         <option value="public">Public</option>
                       </select>
                     </div>
                     <div className="text-sm text-gray-400">
-                      {deck && (
+                      {draftDeck && (
                         <>
                           <p>
-                            From {deck.languageFrom} to {deck.languageTo}
+                            From {draftDeck.languageFrom} to {draftDeck.languageTo}
                           </p>
                           <p>Created on {formattedCreatedAt}</p>
                           {formattedCreatedAt !== formattedModifiedAt && (
@@ -337,8 +367,8 @@ const DeckPage: React.FC = () => {
                 ) : (
                   <div className="mt-8 space-y-3">
                     <ExportModal
-                      wordPairs={wordPairs}
-                      deck={deck as DeckSummary}
+                      wordPairs={originalWordPairs}
+                      deck={originalDeck as DeckSummary}
                     />
                     <ConfirmDialog
                       title="Confirm Deletion"
@@ -361,8 +391,9 @@ const DeckPage: React.FC = () => {
           {/* Right Panel: Word Pairs List */}
           <div className="w-full md:w-1/2">
             <WordPairList
-              wordPairs={wordPairs}
+              wordPairs={draftWordPairs}
               loading={loading}
+              generating={generating}
               emptyMessage1="It looks like you haven't added any word pairs yet. "
               emptyMessage2="Add some to get started!"
             />
