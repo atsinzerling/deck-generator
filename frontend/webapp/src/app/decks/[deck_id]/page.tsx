@@ -29,6 +29,7 @@ import ExportModal from "@/components/deckpage/ExportModal";
 import ConfirmDialog from "@/components/deckpage/ConfirmDialog";
 import DeckSkeleton from "@/components/deckpage/DeckSkeleton";
 import { countdownRedirect } from "@/components/deckpage/countdownRedirect";
+import { fisherYatesShuffle } from "@/lib/utils";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
@@ -78,10 +79,8 @@ const DeckPage: React.FC = () => {
   }, [deckId]);
 
   const shuffleWordPairs = () => {
-    setDraftWordPairs((prev) => {
-      const shuffled = [...prev].sort(() => Math.random() - 0.5);
-      return shuffled;
-    });
+    const pairs = fisherYatesShuffle(draftWordPairs).map((pair, index) => ({ ...pair, position: index + 1 }));
+    setDraftWordPairs(pairs);
   };
 
   const reverseWordPairs = () => {
@@ -129,7 +128,8 @@ const DeckPage: React.FC = () => {
       }
       toast.error(message);
     } else if (data) {
-      setDraftWordPairs(data.wordpairs);
+      const pairs = data.wordpairs.map((pair, index) => ({ ...pair, position: index + 1 }));
+      setDraftWordPairs(pairs);
         // setDraftDeck((prev) => (prev ? { ...prev, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo } as DeckSummary : prev));
       setDraftDeck({ ...draftDeck, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo });
       setDraftWordPairs(data.wordpairs);

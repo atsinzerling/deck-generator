@@ -20,6 +20,7 @@
 export interface WordPairInput {
   wordOriginal: string;
   wordTranslation: string;
+  position?: number;
 }
 
 export interface WordPairUpdateInput {
@@ -27,16 +28,15 @@ export interface WordPairUpdateInput {
   deckId?: number;
   wordOriginal: string;
   wordTranslation: string;
+  position?: number;
 }
 
-export interface WordPairSummary {
+export interface WordPairEntity {
   id: number;
   deckId: number;
   wordOriginal: string;
   wordTranslation: string;
-}
-
-export interface WordPairEntity extends WordPairSummary {
+  position: number;
   createdAt: string;
   lastModified: string;
 }
@@ -59,7 +59,7 @@ export interface DeckUpdateInput {
   /**
    * Optional array of wordpairs. If not provided, only deck metadata is updated.
    */
-  wordpairs?: WordPairInput[];
+  wordpairs?: WordPairUpdateInput[];
 }
 
 /**

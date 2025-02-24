@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { LLMDeck, WordPairInput } from "@/types/decks";
+import { LLMDeck, WordPairInput, WordPairSummary } from "@/types/decks";
 import { GenerateDeckRequest, RefineDeckRequest } from "@/types/decks";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -23,7 +23,7 @@ const NewDeck: React.FC = () => {
 
   const [additionalPrompt, setAdditionalPrompt] = useState("");
 
-  const [wordPairs, setWordPairs] = useState<WordPairInput[]>([]);
+  const [wordPairs, setWordPairs] = useState<WordPairSummary[]>([]);
 
   const [refineStage, setRefineStage] = useState<boolean>(false);
   const [generating, setGenerating] = useState<boolean>(false);
@@ -31,7 +31,8 @@ const NewDeck: React.FC = () => {
   const router = useRouter();
 
   const updateDeckDetails = (data: LLMDeck) => {
-    setWordPairs(data.wordpairs);
+    const pairs = data.wordpairs.map((pair, index) => ({ ...pair, position: index + 1 }));
+    setWordPairs(pairs);
 
     if (data.wordpairs.length > 0) {
       setPairCount(data.wordpairs.length);

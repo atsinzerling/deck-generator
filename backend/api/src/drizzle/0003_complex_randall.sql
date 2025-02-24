@@ -1,0 +1,1 @@
+ALTER TABLE "wordpairs" ADD COLUMN "position" smallint NOT NULL;

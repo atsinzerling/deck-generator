@@ -69,7 +69,7 @@ export class DeckService {
       .select()
       .from(wordpairs)
       .where(eq(wordpairs.deckId, deckId))
-      .orderBy(asc(wordpairs.lastModified)); // is there need to be an error if deck id does not exist?
+      .orderBy(asc(wordpairs.position)); // is there need to be an error if deck id does not exist?
 
     return wordPairs;
   }
@@ -127,6 +127,7 @@ export class DeckService {
     const updatedDeck = updatedDeckRows[0];
 
     if (pairs) {
+      // TODO: sort the pairs by position before syncing, if they all have positions
       const updatedWordpairs = await this.syncWordpairs(id, pairs);
       return { ...updatedDeck, wordpairCount: updatedWordpairs.length, wordpairs: updatedWordpairs };
     }
@@ -145,17 +146,19 @@ export class DeckService {
    * Helper method to insert wordpairs in bulk.
    * Given a deckId and an array of wordpairs (without ids), bulk insert and return the inserted records.
    */
-  private async insertWordpairs(deckId: number, pairs: WordPairInput[]): Promise<WordPairEntity[]> {
+  private async insertWordpairs(deckId: number, input_pairs: WordPairInput[]): Promise<WordPairEntity[]> {
+    const pairs = input_pairs.map((pair, index) => ({ ...pair, position: index + 1 }));
     const insertedWordpairs = await db.insert(wordpairs)
       .values(
         pairs.map((pair) => ({
           deckId,
           wordOriginal: pair.wordOriginal,
           wordTranslation: pair.wordTranslation,
+          position: pair.position,
         }))
       )
       .returning();
-    return insertedWordpairs;
+    return insertedWordpairs.sort((a, b) => a.position - b.position);
   }
 
   /**
@@ -167,7 +170,9 @@ export class DeckService {
    *
    * The function expects the pairs to be an array of objects that extend WordPairInput with an optional 'id' field.
    */
-  private async syncWordpairs(deckId: number, pairs: WordPairUpdateInput[]): Promise<WordPairEntity[]> {
+  private async syncWordpairs(deckId: number, input_pairs: WordPairUpdateInput[]): Promise<WordPairEntity[]> {
+    const pairs = input_pairs.map((pair, index) => ({ ...pair, position: index + 1 }));
+    
     await db.transaction(async (tx) => {
       if (pairs.length === 0) {
         // No pairs provided: delete all wordpairs for the deck.
@@ -202,13 +207,15 @@ export class DeckService {
               deckId,
               wordOriginal: pair.wordOriginal,
               wordTranslation: pair.wordTranslation,
+              position: pair.position,
             }))
           )
           .onConflictDoUpdate({
             target: [wordpairs.id],
             set: {
-              wordOriginal: wordpairs.wordOriginal,
-              wordTranslation: wordpairs.wordTranslation,
+              wordOriginal: sql`EXCLUDED.word_original`,
+              wordTranslation: sql`EXCLUDED.word_translation`,
+              position: sql`EXCLUDED.position`,
             },
           });
       }
@@ -221,6 +228,7 @@ export class DeckService {
               deckId,
               wordOriginal: pair.wordOriginal,
               wordTranslation: pair.wordTranslation,
+              position: pair.position,
             }))
           );
       }
@@ -229,7 +237,7 @@ export class DeckService {
       .select()
       .from(wordpairs)
       .where(eq(wordpairs.deckId, deckId))
-      .orderBy(asc(wordpairs.lastModified));
+      .orderBy(asc(wordpairs.position));
     return updatedWordpairs;
   }
 
