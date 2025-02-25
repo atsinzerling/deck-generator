@@ -33,7 +33,7 @@ export interface WordPairUpdateInput {
   deckId?: number;
   wordOriginal: string;
   wordTranslation: string;
-  position?: number;
+  position: number;
 }
 
 export interface WordPairEntity {

@@ -132,7 +132,6 @@ const DeckPage: React.FC = () => {
       setDraftWordPairs(pairs);
         // setDraftDeck((prev) => (prev ? { ...prev, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo } as DeckSummary : prev));
       setDraftDeck({ ...draftDeck, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo });
-      setDraftWordPairs(data.wordpairs);
       setEditedName(data.name);
       setHistory([...history, refineText]);
       toast.success("Deck refined successfully!");
@@ -396,6 +395,8 @@ const DeckPage: React.FC = () => {
               generating={generating}
               emptyMessage1="It looks like you haven't added any word pairs yet. "
               emptyMessage2="Add some to get started!"
+              editMode={true}
+              onUpdate={(updatedPairs) => setDraftWordPairs(updatedPairs)}
             />
           </div>
         </div>
