@@ -176,6 +176,7 @@ const DeckPage: React.FC = () => {
 
   const handleCancel = () => {
     // Reset any unsaved changes
+    setIsWordPairsEditMode(false);
     if (originalDeck) {
       setEditedName(originalDeck.name);
       setDraftWordPairs(originalWordPairs);
@@ -398,7 +399,7 @@ const DeckPage: React.FC = () => {
             <div className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
               {!loading ? (
                 <div className="flex justify-between items-center mb-4">
-                  <h1 className="text-xl font-medium">Word Pairs</h1>
+                  <h1 className="text-2xl font-medium">Word Pairs</h1>
                   <button
                     onClick={() => setIsWordPairsEditMode(!isWordPairsEditMode)}
                     className="text-gray-400 hover:text-white"

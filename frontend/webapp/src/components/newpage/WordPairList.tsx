@@ -27,6 +27,42 @@ const WordPairList: React.FC<WordPairListProps> = ({
   editMode = false,
   onUpdate,
 }) => {
+  const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
+  const [editingField, setEditingField] = React.useState<"wordOriginal" | "wordTranslation" | null>(null);
+
+  const handleInlineEdit = (
+    index: number,
+    field: "wordOriginal" | "wordTranslation",
+    value: string
+  ) => {
+    const newList = [...wordPairs];
+    newList[index] = { ...newList[index], [field]: value };
+    if (onUpdate) onUpdate(newList);
+  };
+
+  const handleInlineKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === "Escape") {
+      setEditingIndex(null);
+      setEditingField(null);
+    }
+  };
+
+  const handleInlineBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setTimeout(() => {
+      const active = document.activeElement;
+      if (!active || !(active as HTMLElement).dataset.editing) {
+        if (editingIndex !== null) {
+          const pair = wordPairs[editingIndex];
+          if (pair.wordOriginal.trim() === "" && pair.wordTranslation.trim() === "") {
+            handleDelete(editingIndex);
+          }
+        }
+        setEditingIndex(null);
+        setEditingField(null);
+      }
+    }, 0);
+  };
+
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
 
@@ -62,6 +98,19 @@ const WordPairList: React.FC<WordPairListProps> = ({
     if (onUpdate) onUpdate(newList);
   };
 
+  const addNewWordPair = () => {
+    const newPosition = wordPairs.length > 0 ? wordPairs[wordPairs.length - 1].position + 1 : 0;
+    const newPair: WordPairUpdateInput = {
+      wordOriginal: "",
+      wordTranslation: "",
+      position: newPosition,
+    };
+    const newList = [...wordPairs, newPair];
+    if (onUpdate) onUpdate(newList);
+    setEditingIndex(newList.length - 1);
+    setEditingField("wordOriginal");
+  };
+
   const renderContent = () => {
     if (loading) return <WordPairListSkeleton />;
     if (!editMode && wordPairs.length === 0) {
@@ -80,13 +129,13 @@ const WordPairList: React.FC<WordPairListProps> = ({
             <div className="space-y-4 pr-4">
               {wordPairs.map((pair) => (
                 <div className="flex gap-4" key={pair.position}>
-                <div className="w-1/2 bg-[#2f2f2f] p-4 rounded-lg">
-                  {pair.wordOriginal}
+                  <div className="w-1/2 bg-[#2f2f2f] p-4 rounded-lg">
+                    {pair.wordOriginal}
+                  </div>
+                  <div className="w-1/2 bg-[#363636] p-4 rounded-lg">
+                    {pair.wordTranslation}
+                  </div>
                 </div>
-                <div className="w-1/2 bg-[#363636] p-4 rounded-lg">
-                  {pair.wordTranslation}
-                </div>
-              </div>
               ))}
             </div>
           </CustomScrollArea>
@@ -124,12 +173,49 @@ const WordPairList: React.FC<WordPairListProps> = ({
                             <FontAwesomeIcon icon={faGripVertical} />
                           </div>
                           <div className="flex-1 flex gap-4">
-                            <div className="w-1/2 bg-[#2f2f2f] p-4 rounded-lg">
-                              {pair.wordOriginal}
-                            </div>
-                            <div className="w-1/2 bg-[#363636] p-4 rounded-lg">
-                              {pair.wordTranslation}
-                            </div>
+                            {editingIndex === index ? (
+                              <>
+                                <input
+                                  type="text"
+                                  value={pair.wordOriginal}
+                                  onChange={(e) =>
+                                    handleInlineEdit(index, "wordOriginal", e.target.value)
+                                  }
+                                  onKeyDown={handleInlineKeyDown}
+                                  onBlur={handleInlineBlur}
+                                  data-editing="true"
+                                  className="w-1/2 bg-[#2f2f2f] p-4 rounded-lg outline-none text-gray-200"
+                                  autoFocus={editingField === "wordOriginal"}
+                                />
+                                <input
+                                  type="text"
+                                  value={pair.wordTranslation}
+                                  onChange={(e) =>
+                                    handleInlineEdit(index, "wordTranslation", e.target.value)
+                                  }
+                                  onKeyDown={handleInlineKeyDown}
+                                  onBlur={handleInlineBlur}
+                                  data-editing="true"
+                                  className="w-1/2 bg-[#363636] p-4 rounded-lg outline-none text-gray-200"
+                                  autoFocus={editingField === "wordTranslation"}
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <div
+                                  className="w-1/2 bg-[#2f2f2f] p-4 rounded-lg cursor-text"
+                                  onClick={() => { setEditingIndex(index); setEditingField("wordOriginal"); }}
+                                >
+                                  {pair.wordOriginal}
+                                </div>
+                                <div
+                                  className="w-1/2 bg-[#363636] p-4 rounded-lg cursor-text"
+                                  onClick={() => { setEditingIndex(index); setEditingField("wordTranslation"); }}
+                                >
+                                  {pair.wordTranslation}
+                                </div>
+                              </>
+                            )}
                           </div>
                           <button
                             onClick={() => handleDelete(index)}
@@ -142,6 +228,12 @@ const WordPairList: React.FC<WordPairListProps> = ({
                     </Draggable>
                   ))}
                   {provided.placeholder}
+                  <div
+                    className="flex items-center justify-center w-full p-4 mt-4 border border-dashed border-gray-600 rounded-lg cursor-pointer"
+                    onClick={addNewWordPair}
+                  >
+                    <span className="text-gray-400">+ Add new word</span>
+                  </div>
                 </div>
               </CustomScrollArea>
             </div>
