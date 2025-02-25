@@ -309,12 +309,14 @@ const NewDeck: React.FC = () => {
           </div>
 
           <div className="w-full md:w-1/2">
-            <WordPairList
-              wordPairs={wordPairs}
-              generating={generating}
-              emptyMessage1="Generated word pairs will appear here"
-              emptyMessage2="Fill in the form and click Generate to create your custom language learning deck"
-            />
+            <div className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
+              <WordPairList
+                wordPairs={wordPairs}
+                generating={generating}
+                emptyMessage1="Generated word pairs will appear here"
+                emptyMessage2="Fill in the form and click Generate to create your custom language learning deck"
+              />
+            </div>
           </div>
         </div>
       </div>

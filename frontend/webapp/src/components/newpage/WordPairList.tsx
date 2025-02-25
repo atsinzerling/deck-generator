@@ -1,6 +1,5 @@
 import React from "react";
 import CustomScrollArea from "@/components/CustomScrollArea";
-import WordPairTile from "@/components/newpage/WordPairTile";
 import { WordPairUpdateInput } from "@/types/decks";
 import { Circles } from "react-loader-spinner";
 import WordPairListSkeleton from "@/components/newpage/WordPairListSkeleton";
@@ -80,7 +79,14 @@ const WordPairList: React.FC<WordPairListProps> = ({
           <CustomScrollArea className="h-full">
             <div className="space-y-4 pr-4">
               {wordPairs.map((pair) => (
-                <WordPairTile key={pair.position} pair={pair} />
+                <div className="flex gap-4" key={pair.position}>
+                <div className="w-1/2 bg-[#2f2f2f] p-4 rounded-lg">
+                  {pair.wordOriginal}
+                </div>
+                <div className="w-1/2 bg-[#363636] p-4 rounded-lg">
+                  {pair.wordTranslation}
+                </div>
+              </div>
               ))}
             </div>
           </CustomScrollArea>
@@ -109,7 +115,7 @@ const WordPairList: React.FC<WordPairListProps> = ({
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className="flex items-center gap-2 word-pair-enter"
+                          className="flex items-center gap-3 word-pair-enter"
                         >
                           <div
                             {...provided.dragHandleProps}
@@ -146,7 +152,7 @@ const WordPairList: React.FC<WordPairListProps> = ({
   };
 
   return (
-    <div className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
+    <>
       {/* <h2 className="text-2xl font-bold mb-8">{title}</h2> */}
       {renderContent()}
       {generating && (
@@ -160,7 +166,7 @@ const WordPairList: React.FC<WordPairListProps> = ({
           />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

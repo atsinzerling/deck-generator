@@ -14,6 +14,7 @@ import WordPairList from "@/components/newpage/WordPairList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPencil,
+  faCheck,
   faRandom,
   faExchangeAlt,
   faPlay,
@@ -45,6 +46,7 @@ const DeckPage: React.FC = () => {
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [isRefineOpen, setIsRefineOpen] = useState(false);
+  const [isWordPairsEditMode, setIsWordPairsEditMode] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [generating, setGenerating] = useState<boolean>(false);
 
@@ -144,7 +146,9 @@ const DeckPage: React.FC = () => {
 
   const handleSave = async () => {
     if (!draftDeck) return;
-    setLoading(true);
+    // setLoading(true);
+    // const loadingToast = toast.loading("Saving deck...");
+    setIsWordPairsEditMode(false);
 
     const payload = {
       id: draftDeck.id,
@@ -156,6 +160,7 @@ const DeckPage: React.FC = () => {
 
     const { success, data, error: updateError } = await api.decks.updateDeck(payload);
     if (!success) {
+      // toast.dismiss(loadingToast);
       toast.error("Failed to save deck.");
     } else if (data) {
       setOriginalWordPairs(data.wordpairs as WordPairUpdateInput[]);
@@ -163,9 +168,10 @@ const DeckPage: React.FC = () => {
       setDraftWordPairs(data.wordpairs as WordPairUpdateInput[]);
       setDraftDeck(data as DeckSummary);
       setEditedName(data.name);
+      // toast.dismiss(loadingToast);
       toast.success("Deck saved successfully!");
     }
-    setLoading(false);
+    // setLoading(false);
   };
 
   const handleCancel = () => {
@@ -248,7 +254,7 @@ const DeckPage: React.FC = () => {
                     size="icon"
                     onClick={() => setIsEditingName(!isEditingName)}
                   >
-                    <FontAwesomeIcon icon={faPencil} className="h-4 w-4" />
+                    <FontAwesomeIcon icon={(isEditingName ? faCheck : faPencil)} className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -389,15 +395,28 @@ const DeckPage: React.FC = () => {
 
           {/* Right Panel: Word Pairs List */}
           <div className="w-full md:w-1/2">
-            <WordPairList
-              wordPairs={draftWordPairs}
-              loading={loading}
-              generating={generating}
-              emptyMessage1="It looks like you haven't added any word pairs yet. "
-              emptyMessage2="Add some to get started!"
-              editMode={true}
-              onUpdate={(updatedPairs) => setDraftWordPairs(updatedPairs)}
-            />
+            <div className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
+              {!loading ? (
+                <div className="flex justify-between items-center mb-4">
+                  <h1 className="text-xl font-medium">Word Pairs</h1>
+                  <button
+                    onClick={() => setIsWordPairsEditMode(!isWordPairsEditMode)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <FontAwesomeIcon icon={(isWordPairsEditMode ? faCheck : faPencil)} className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (<></>)}
+                <WordPairList
+                  wordPairs={draftWordPairs}
+                  loading={loading}
+                  generating={generating}
+                  emptyMessage1="It looks like you haven't added any word pairs yet. "
+                  emptyMessage2="Add some to get started!"
+                editMode={isWordPairsEditMode}
+                onUpdate={(updatedPairs) => setDraftWordPairs(updatedPairs)}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -7,8 +7,8 @@ const WordPairListSkeleton: React.FC = () => {
     <div className="space-y-4 pr-4">
       {Array.from({ length: skeletonRows }).map((_, index) => (
         <div key={index} className="flex gap-4">
-          <Skeleton className="w-1/2 h-14 bg-[#2f2f2f] rounded-lg" />
-          <Skeleton className="w-1/2 h-14 bg-[#363636] rounded-lg" />
+          <Skeleton className="w-1/2 h-14 bg-gray-700/50 rounded-lg" />
+          <Skeleton className="w-1/2 h-14 bg-gray-700/50 rounded-lg" />
         </div>
       ))}
     </div>
