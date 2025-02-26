@@ -122,6 +122,7 @@ export interface GenerateDeckRequest {
 export interface RefineDeckRequest {
   prompt: string;
   history: string[];
+  preserveExistingPairs: boolean;
   currentDeck: LLMDeck;
 } 
 

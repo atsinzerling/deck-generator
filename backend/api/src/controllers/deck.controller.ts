@@ -13,7 +13,7 @@ import {
 import { DeckService } from '../services/deck.service';
 import { LLMProvider } from '../services/llm/types';
 import { OpenAIProvider } from '../services/llm/openai';
-import { GENERATE_SYSTEM_PROMPT, getGenerateDeckPrompt, getRefineDeckPrompt, REFINE_SYSTEM_PROMPT } from '../config/prompts';
+import { GENERATE_SYSTEM_PROMPT, getGenerateDeckPrompt, getRefineDeckPrompt, REFINE_OVERWRITE_SYSTEM_PROMPT, REFINE_PRESERVE_SYSTEM_PROMPT } from '../config/prompts';
 
 import { BadRequestError} from '../errors';
 import { parseLlmResponse } from '../utils/llm';
@@ -86,9 +86,9 @@ export class DeckController extends Controller {
     @Body() request: RefineDeckRequest
   ): Promise<apiSuccessResponse<LLMDeck>> {
       // const parsedRequest = RefineDeckRequestSchema.parse(request);
-
+      const systemPrompt = (request.preserveExistingPairs) ? REFINE_PRESERVE_SYSTEM_PROMPT : REFINE_OVERWRITE_SYSTEM_PROMPT;
       const result = await this.llmProvider.generateCompletion(
-        REFINE_SYSTEM_PROMPT, 
+        systemPrompt, 
         getRefineDeckPrompt(request.prompt, request.currentDeck, request.history)
       );
       const refinedDeck: LLMDeck = parseLlmResponse(result);
