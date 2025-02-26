@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import WordPairList from "@/components/newpage/WordPairList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSync, faMagicWandSparkles } from "@fortawesome/free-solid-svg-icons";
+import { PreserveToggle } from "@/components/PreserveToggle";
 import toast from "react-hot-toast";
 
 const NewDeck: React.FC = () => {
@@ -20,6 +21,7 @@ const NewDeck: React.FC = () => {
   const [theme, setTheme] = useState("");
   const [pairCount, setPairCount] = useState<number>(5);
   const [history, setHistory] = useState<string[]>([]);
+  const [preserveExistingPairs, setPreserveExistingPairs] = useState(false);
 
   const [additionalPrompt, setAdditionalPrompt] = useState("");
 
@@ -97,11 +99,15 @@ const NewDeck: React.FC = () => {
     const payload: RefineDeckRequest = {
       prompt: additionalPrompt,
       history: history,
+      preserveExistingPairs: preserveExistingPairs,
       currentDeck: {
         name: deckName || theme,
         languageFrom: fromLanguage,
         languageTo: toLanguage,
-        wordpairs: wordPairs,
+        wordpairs: wordPairs.map((pair) => ({
+          wordOriginal: pair.wordOriginal,
+          wordTranslation: pair.wordTranslation,
+        })),
       },
     };
 
@@ -121,7 +127,14 @@ const NewDeck: React.FC = () => {
       }
       toast.error(message);
     } else if (data) {
-      updateDeckDetails(data);
+      let updatedData = data;
+      if (preserveExistingPairs) {
+        updatedData = {
+          ...data,
+          wordpairs: [...wordPairs, ...data.wordpairs],
+        };
+      }
+      updateDeckDetails(updatedData);
       toast.success("Deck refined successfully!");
       setHistory([...history, `refine request: ${additionalPrompt}`]);
     }
@@ -269,6 +282,12 @@ const NewDeck: React.FC = () => {
                   onChange={(e) => setAdditionalPrompt(e.target.value)}
                   className="bg-[#1a1a1a] border-gray-600 h-24 resize-none"
                 />
+                {refineStage && (
+                  <PreserveToggle 
+                    checked={preserveExistingPairs} 
+                    onChange={setPreserveExistingPairs} 
+                  />
+                )}
               </div>
 
               <div className="space-y-4">
@@ -295,7 +314,7 @@ const NewDeck: React.FC = () => {
                     </Button>
                     <Button
                       onClick={() => {
-                        router.push("/decks");
+                        router.push("/dashboard");
                       }}
                       disabled={generating}
                       className="w-1/2 px-4 py-2 bg-[#2f2f2f] text-white rounded-lg hover:bg-[#363636]"

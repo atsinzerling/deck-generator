@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   DeckSummary,
+  RefineDeckRequest,
   WordPairUpdateInput,
 } from "@/types/decks";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +24,7 @@ import {
   faChevronDown,
   faFileExport,
   faTrashAlt,
+  faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatDate } from "@/lib/dates";
 import toast from "react-hot-toast";
@@ -31,6 +33,7 @@ import ConfirmDialog from "@/components/deckpage/ConfirmDialog";
 import DeckSkeleton from "@/components/deckpage/DeckSkeleton";
 import { countdownRedirect } from "@/components/deckpage/countdownRedirect";
 import { fisherYatesShuffle } from "@/lib/utils";
+import { PreserveToggle } from "@/components/PreserveToggle";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
@@ -43,6 +46,8 @@ const DeckPage: React.FC = () => {
   const [refineText, setRefineText] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [privacy, setPrivacy] = useState("private");
+
+  const [preserveExistingPairs, setPreserveExistingPairs] = useState(true);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [isRefineOpen, setIsRefineOpen] = useState(false);
@@ -105,9 +110,10 @@ const DeckPage: React.FC = () => {
     if (!draftDeck) return;
     setGenerating(true);
 
-    const payload = {
+    const payload : RefineDeckRequest = {
       prompt: refineText,
       history: history,
+      preserveExistingPairs: preserveExistingPairs,
       currentDeck: {
         name: draftDeck.name,
         languageFrom: draftDeck.languageFrom,
@@ -122,22 +128,41 @@ const DeckPage: React.FC = () => {
     const { success, data, error: refineError } = await api.decks.refineDeck(payload);
     if (!success) {
       let message = "Failed to refine deck.";
-      if ((refineError?.type === "LLMError" ||
-          refineError?.type === "LLMParseError")
+      if (
+        refineError?.type === "LLMError" ||
+        refineError?.type === "LLMParseError"
       ) {
         message =
           "An error occurred while generating a deck. Try again or change the prompt.";
       }
       toast.error(message);
     } else if (data) {
-      const pairs = data.wordpairs.map((pair, index) => ({ ...pair, position: index + 1 }));
-      setDraftWordPairs(pairs);
-        // setDraftDeck((prev) => (prev ? { ...prev, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo } as DeckSummary : prev));
-      setDraftDeck({ ...draftDeck, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo });
+
+      // If preserving existing pairs, append the new pairs
+      let updatedPairs = data.wordpairs;
+      if (preserveExistingPairs) {
+        updatedPairs = [...draftWordPairs, ...data.wordpairs].map((pair, index) => ({
+          ...pair,
+          position: index + 1,
+        }));
+      } else {
+        updatedPairs = data.wordpairs.map((pair, index) => ({
+          ...pair,
+          position: index + 1,
+        }));
+      }
+      // setDraftDeck((prev) => (prev ? { ...prev, name: data.name, languageFrom: data.languageFrom, languageTo: data.languageTo } as DeckSummary : prev));
+      
+      setDraftWordPairs(updatedPairs as WordPairUpdateInput[]);
+      setDraftDeck({
+        ...draftDeck,
+        name: data.name,
+        languageFrom: data.languageFrom,
+        languageTo: data.languageTo,
+      });
       setEditedName(data.name);
       setHistory([...history, refineText]);
       toast.success("Deck refined successfully!");
-      // updating languages and deck name later
     }
     setGenerating(false);
     // setIsRefineOpen(false);
@@ -343,6 +368,10 @@ const DeckPage: React.FC = () => {
                         value={refineText}
                         onChange={(e) => setRefineText(e.target.value)}
                         className="w-full bg-[#1a1a1a] border border-gray-600 rounded-lg px-4 py-2 h-24 resize-none"
+                      />
+                      <PreserveToggle 
+                        checked={preserveExistingPairs} 
+                        onChange={setPreserveExistingPairs} 
                       />
                       <Button
                         onClick={handleRefine}
