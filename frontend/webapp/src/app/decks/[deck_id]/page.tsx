@@ -108,6 +108,10 @@ const DeckPage: React.FC = () => {
 
   const handleRefine = async () => {
     if (!draftDeck) return;
+    if (!refineText.trim()) {
+      toast.error("Please provide instructions on how to refine the deck.");
+      return;
+    }
     setGenerating(true);
 
     const payload : RefineDeckRequest = {

@@ -58,6 +58,11 @@ const NewDeck: React.FC = () => {
   };
 
   const handleGenerate = async () => {
+    if (!theme.trim() && !additionalPrompt.trim()) {
+      toast.error("Please provide a theme/topic or additional instructions to generate word pairs.");
+      return;
+    }
+    
     setGenerating(true);
 
     const payload: GenerateDeckRequest = {
@@ -73,11 +78,11 @@ const NewDeck: React.FC = () => {
       data,
       error: apiError,
     } = await api.decks.generateDeck(payload);
+    
     if (!success) {
       let message = "Failed to generate deck.";
       if (apiError?.type === "LLMError" || apiError?.type === "LLMParseError") {
-        message =
-          "An error occurred while generating a deck. Try again or change the prompt.";
+        message = "An error occurred while generating a deck. Try again or change the prompt.";
       }
       toast.error(message);
     } else if (data) {
@@ -90,10 +95,16 @@ const NewDeck: React.FC = () => {
         }`,
       ]);
     }
+    
     setGenerating(false);
   };
 
   const handleRefine = async () => {
+    if (!additionalPrompt.trim()) {
+      toast.error("Please provide instructions on how to refine the deck.");
+      return;
+    }
+    
     setGenerating(true);
 
     const payload: RefineDeckRequest = {
@@ -116,14 +127,11 @@ const NewDeck: React.FC = () => {
       data,
       error: apiError,
     } = await api.decks.refineDeck(payload);
+    
     if (!success) {
       let message = "Failed to refine deck.";
-      if (
-        apiError?.type === "LLMError" ||
-        apiError?.type === "LLMParseError"
-      ) {
-        message =
-          "An error occurred while generating a deck. Try again or change the prompt.";
+      if (apiError?.type === "LLMError" || apiError?.type === "LLMParseError") {
+        message = "An error occurred while generating a deck. Try again or change the prompt.";
       }
       toast.error(message);
     } else if (data) {
@@ -138,6 +146,7 @@ const NewDeck: React.FC = () => {
       toast.success("Deck refined successfully!");
       setHistory([...history, `refine request: ${additionalPrompt}`]);
     }
+    
     setGenerating(false);
   };
 
