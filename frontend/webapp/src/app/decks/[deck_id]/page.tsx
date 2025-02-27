@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef, useLayoutEffect } from "react";
 import isEqual from "lodash.isequal";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -58,6 +58,10 @@ const DeckPage: React.FC = () => {
   const router = useRouter();
   const {startCountdownRedirect} = countdownRedirect();
 
+  const leftPaneRef = useRef<HTMLDivElement>(null);
+  const [leftPaneHeight, setLeftPaneHeight] = useState<number | null>(null);
+
+
   useEffect(() => {
     const fetchDeckData = async () => {
       setLoading(true);
@@ -84,6 +88,34 @@ const DeckPage: React.FC = () => {
 
     fetchDeckData();
   }, [deckId]);
+
+
+  useLayoutEffect(() => {
+    if (!leftPaneRef.current) return;
+    
+    const updateHeight = () => {
+      if (leftPaneRef.current) {
+        const height = Math.ceil(leftPaneRef.current.getBoundingClientRect().height);
+        setLeftPaneHeight(height);
+      }
+    };
+  
+    const resizeObserver = new ResizeObserver((entries) => {
+      const { height } = entries[0].contentRect;
+      setLeftPaneHeight(Math.ceil(height));
+    });
+    resizeObserver.observe(leftPaneRef.current);
+  
+    window.addEventListener("resize", updateHeight);
+  
+    // Also call immediately when dependencies change, e.g., the refine toggle state.
+    updateHeight();
+  
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [isRefineOpen]);
 
   const shuffleWordPairs = () => {
     const pairs = fisherYatesShuffle(draftWordPairs).map((pair, index) => ({ ...pair, position: index + 1 }));
@@ -249,11 +281,14 @@ const DeckPage: React.FC = () => {
   }, [originalDeck, draftDeck, originalWordPairs, draftWordPairs]);
 
   return (
-    <div className="min-h-screen w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
+    <div className="min-h-[calc(100vh-4.55rem)] w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left Panel: Deck information and actions */}
-          <div className="w-full md:w-1/2 bg-[#242424] rounded-xl p-6">
+          <div
+            ref={leftPaneRef}
+            className="w-full md:w-1/2 bg-[#242424] rounded-xl p-6"
+          >
             {loading ? (
               <DeckSkeleton />
             ) : (
@@ -429,7 +464,14 @@ const DeckPage: React.FC = () => {
 
           {/* Right Panel: Word Pairs List */}
           <div className="w-full md:w-1/2">
-            <div className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
+            <div
+                className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col overflow-auto"
+                style={{
+                  maxHeight: leftPaneHeight
+                    ? `max(calc(100vh - 9rem), ${leftPaneHeight}px)`
+                    : "calc(100vh - 9rem)",
+                }}
+              >
               {!loading ? (
                 <div className="flex justify-between items-center mb-4">
                   <h1 className="text-2xl font-medium">Word Pairs</h1>
@@ -447,11 +489,11 @@ const DeckPage: React.FC = () => {
                   generating={generating}
                   emptyMessage1="It looks like you haven't added any word pairs yet. "
                   emptyMessage2="Add some to get started!"
-                editMode={isWordPairsEditMode}
-                onUpdate={(updatedPairs) => setDraftWordPairs(updatedPairs)}
-              />
+                  editMode={isWordPairsEditMode}
+                  onUpdate={(updatedPairs) => setDraftWordPairs(updatedPairs)}
+                />
+              </div>
             </div>
-          </div>
         </div>
       </div>
     </div>

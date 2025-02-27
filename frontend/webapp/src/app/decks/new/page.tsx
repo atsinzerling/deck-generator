@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { LLMDeck, WordPairInput, WordPairSummary } from "@/types/decks";
@@ -29,6 +29,23 @@ const NewDeck: React.FC = () => {
 
   const [refineStage, setRefineStage] = useState<boolean>(false);
   const [generating, setGenerating] = useState<boolean>(false);
+
+  const leftPaneRef = useRef<HTMLDivElement>(null);
+  const [leftPaneHeight, setLeftPaneHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (leftPaneRef.current) {
+        const height = leftPaneRef.current.getBoundingClientRect().height;
+        setLeftPaneHeight(height);
+      }
+    };
+
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+
+    return () => window.removeEventListener("resize", updateHeight);
+  }, [refineStage]);
 
   const router = useRouter();
 
@@ -174,10 +191,14 @@ const NewDeck: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
+    <div className="min-h-[calc(100vh-4.55rem)] w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-1/2 bg-[#242424] rounded-xl p-6">
+          {/* Left Pane */}
+          <div
+            ref={leftPaneRef}
+            className="w-full md:w-1/2 bg-[#242424] rounded-xl p-6"
+          >
             <h1 className="text-3xl font-bold mb-8">Create New Deck</h1>
             <div className="space-y-6">
               <div className="flex gap-4">
@@ -336,8 +357,16 @@ const NewDeck: React.FC = () => {
             </div>
           </div>
 
+          {/* Right Pane */}
           <div className="w-full md:w-1/2">
-            <div className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col max-h-[calc(100vh)]">
+            <div
+              className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col overflow-auto"
+              style={{
+                maxHeight: leftPaneHeight
+                  ? `max(calc(100vh - 9rem), ${leftPaneHeight}px)`
+                  : "calc(100vh - 9rem)",
+              }}
+            >
               <WordPairList
                 wordPairs={wordPairs}
                 generating={generating}
