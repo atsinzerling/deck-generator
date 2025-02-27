@@ -34,6 +34,7 @@ import DeckSkeleton from "@/components/deckpage/DeckSkeleton";
 import { countdownRedirect } from "@/components/deckpage/countdownRedirect";
 import { fisherYatesShuffle } from "@/lib/utils";
 import { PreserveToggle } from "@/components/PreserveToggle";
+import { ChevronsLeftIcon } from "lucide-react";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
@@ -59,6 +60,7 @@ const DeckPage: React.FC = () => {
   const {startCountdownRedirect} = countdownRedirect();
 
   const leftPaneRef = useRef<HTMLDivElement>(null);
+  const rightPaneRef = useRef<HTMLDivElement>(null);
   const [leftPaneHeight, setLeftPaneHeight] = useState<number | null>(null);
 
 
@@ -97,12 +99,28 @@ const DeckPage: React.FC = () => {
       if (leftPaneRef.current) {
         const height = Math.ceil(leftPaneRef.current.getBoundingClientRect().height);
         setLeftPaneHeight(height);
+        if (rightPaneRef.current) {
+          console.log(`window ineer height: ${window.innerHeight} leftpane height: ${height}`);
+          if (window.innerHeight - 9*16 <= height) {
+            console.log("leftheight larger than window height", height);
+            rightPaneRef.current.style.maxHeight = `${height+16*3}px`;
+          }
+          rightPaneRef.current.style.height = `${height+16*3}px`;
+        }
       }
     };
   
     const resizeObserver = new ResizeObserver((entries) => {
       const { height } = entries[0].contentRect;
       setLeftPaneHeight(Math.ceil(height));
+      if (rightPaneRef.current) {
+        console.log(`window ineer height: ${window.innerHeight} leftpane height: ${height}`);
+        if (window.innerHeight - 9*16 <= height) {
+          console.log("leftheight larger than window height", height);
+          rightPaneRef.current.style.maxHeight = `${height+16*3}px`;
+        }
+        rightPaneRef.current.style.height = `${height+16*3}px`;
+      }
     });
     resizeObserver.observe(leftPaneRef.current);
   
@@ -110,6 +128,9 @@ const DeckPage: React.FC = () => {
   
     // Also call immediately when dependencies change, e.g., the refine toggle state.
     updateHeight();
+    setTimeout(() => {
+      updateHeight();
+    }, 200);
   
     return () => {
       resizeObserver.disconnect();
@@ -464,7 +485,8 @@ const DeckPage: React.FC = () => {
 
           {/* Right Panel: Word Pairs List */}
           <div className="w-full md:w-1/2">
-            <div
+            <div 
+                ref={rightPaneRef}
                 className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col overflow-auto"
                 style={{
                   maxHeight: leftPaneHeight
