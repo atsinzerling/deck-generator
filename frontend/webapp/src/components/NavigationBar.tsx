@@ -17,7 +17,7 @@ const NavigationBar: React.FC = () => {
 
   return (
     <nav className="bg-[#242424] border-b border-gray-700">
-      <div className="max-w-7xl mx-auto px-0.5 py-4">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="text-xl font-bold text-[#4f46e5]">
             Deck Generator

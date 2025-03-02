@@ -378,6 +378,7 @@ const DeckPage: React.FC = () => {
                       <Button
                         onClick={shuffleWordPairs}
                         className="flex-1 inline-flex items-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
+                        disabled={generating}
                       >
                         <FontAwesomeIcon icon={faRandom} className="h-4 w-4" />
                         Shuffle
@@ -385,6 +386,7 @@ const DeckPage: React.FC = () => {
                       <Button
                         onClick={reverseWordPairs}
                         className="flex-1 inline-flex items-center gap-2 px-4 py-2 bg-[#2f2f2f] rounded-lg hover:bg-[#363636]"
+                        disabled={generating}
                       >
                         <FontAwesomeIcon
                           icon={faExchangeAlt}
@@ -432,6 +434,7 @@ const DeckPage: React.FC = () => {
                       <PreserveToggle 
                         checked={preserveExistingPairs} 
                         onChange={setPreserveExistingPairs} 
+                        disabled={generating}
                       />
                       <Button
                         onClick={handleRefine}

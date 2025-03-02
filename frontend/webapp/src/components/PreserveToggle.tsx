@@ -8,15 +8,17 @@ import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 type PreserveToggleProps = {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
 };
 
-const PreserveToggle: React.FC<PreserveToggleProps> = ({ checked, onChange }) => {
+const PreserveToggle: React.FC<PreserveToggleProps> = ({ checked, onChange, disabled = false }) => {
   return (
     <div className="flex items-center">
       <Switch
         checked={checked}
         onCheckedChange={(checkedValue) => onChange(checkedValue as boolean)}
         className="mr-2"
+        disabled={disabled}
       />
       <span className="text-sm font-medium text-gray-200 flex items-center">
         Preserve existing pairs

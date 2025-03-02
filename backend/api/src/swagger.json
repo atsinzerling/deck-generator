@@ -15,6 +15,10 @@
 					},
 					"wordTranslation": {
 						"type": "string"
+					},
+					"position": {
+						"type": "number",
+						"format": "double"
 					}
 				},
 				"required": [
@@ -47,6 +51,22 @@
 					"languageFrom",
 					"languageTo",
 					"wordpairs"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"apiSuccessResponse_LLMDeck_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"data": {
+						"$ref": "#/components/schemas/LLMDeck"
+					}
+				},
+				"required": [
+					"success",
+					"data"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -91,6 +111,9 @@
 						},
 						"type": "array"
 					},
+					"preserveExistingPairs": {
+						"type": "boolean"
+					},
 					"currentDeck": {
 						"$ref": "#/components/schemas/LLMDeck"
 					}
@@ -98,6 +121,7 @@
 				"required": [
 					"prompt",
 					"history",
+					"preserveExistingPairs",
 					"currentDeck"
 				],
 				"type": "object",
@@ -142,6 +166,25 @@
 				"type": "object",
 				"additionalProperties": true
 			},
+			"apiSuccessResponse_DeckSummary-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/DeckSummary"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
 			"WordPairEntity": {
 				"properties": {
 					"id": {
@@ -158,6 +201,10 @@
 					"wordTranslation": {
 						"type": "string"
 					},
+					"position": {
+						"type": "number",
+						"format": "double"
+					},
 					"createdAt": {
 						"type": "string"
 					},
@@ -170,6 +217,7 @@
 					"deckId",
 					"wordOriginal",
 					"wordTranslation",
+					"position",
 					"createdAt",
 					"lastModified"
 				],
@@ -220,6 +268,22 @@
 				"type": "object",
 				"additionalProperties": true
 			},
+			"apiSuccessResponse_DeckSummaryOptionalReturn_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"data": {
+						"$ref": "#/components/schemas/DeckSummaryOptionalReturn"
+					}
+				},
+				"required": [
+					"success",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
 			"DeckOptionalReturn": {
 				"description": "DeckOptionalReturn is used by deck insertion and update endpoints to return their\nintended result. It is similar to DeckDetail, but the last two fields (wordpairCount and wordpairs)\nare optional. This offers flexibility, for instance, when the full list of wordpairs isn't returned.",
 				"properties": {
@@ -264,6 +328,22 @@
 				"type": "object",
 				"additionalProperties": true
 			},
+			"apiSuccessResponse_DeckOptionalReturn_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"data": {
+						"$ref": "#/components/schemas/DeckOptionalReturn"
+					}
+				},
+				"required": [
+					"success",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
 			"DeckCreateInput": {
 				"properties": {
 					"name": {
@@ -291,6 +371,34 @@
 				"type": "object",
 				"additionalProperties": true
 			},
+			"WordPairUpdateInput": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"deckId": {
+						"type": "number",
+						"format": "double"
+					},
+					"wordOriginal": {
+						"type": "string"
+					},
+					"wordTranslation": {
+						"type": "string"
+					},
+					"position": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"wordOriginal",
+					"wordTranslation"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
 			"DeckUpdateInput": {
 				"properties": {
 					"id": {
@@ -308,7 +416,7 @@
 					},
 					"wordpairs": {
 						"items": {
-							"$ref": "#/components/schemas/WordPairInput"
+							"$ref": "#/components/schemas/WordPairUpdateInput"
 						},
 						"type": "array",
 						"description": "Optional array of wordpairs. If not provided, only deck metadata is updated."
@@ -323,26 +431,41 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"WordPairUpdateInput": {
+			"apiSuccessResponse_null_": {
 				"properties": {
-					"id": {
+					"success": {
+						"type": "boolean"
+					},
+					"data": {
 						"type": "number",
-						"format": "double"
-					},
-					"deckId": {
-						"type": "number",
-						"format": "double"
-					},
-					"wordOriginal": {
-						"type": "string"
-					},
-					"wordTranslation": {
-						"type": "string"
+						"enum": [
+							null
+						],
+						"nullable": true
 					}
 				},
 				"required": [
-					"wordOriginal",
-					"wordTranslation"
+					"success",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"apiSuccessResponse_WordPairEntity-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/WordPairEntity"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"data"
 				],
 				"type": "object",
 				"additionalProperties": true
@@ -368,7 +491,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/LLMDeck"
+									"$ref": "#/components/schemas/apiSuccessResponse_LLMDeck_"
 								}
 							}
 						}
@@ -400,7 +523,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/LLMDeck"
+									"$ref": "#/components/schemas/apiSuccessResponse_LLMDeck_"
 								}
 							}
 						}
@@ -432,10 +555,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/DeckSummary"
-									},
-									"type": "array"
+									"$ref": "#/components/schemas/apiSuccessResponse_DeckSummary-Array_"
 								}
 							}
 						}
@@ -455,7 +575,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/DeckOptionalReturn"
+									"$ref": "#/components/schemas/apiSuccessResponse_DeckOptionalReturn_"
 								}
 							}
 						}
@@ -487,7 +607,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/DeckSummaryOptionalReturn"
+									"$ref": "#/components/schemas/apiSuccessResponse_DeckSummaryOptionalReturn_"
 								}
 							}
 						}
@@ -526,7 +646,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/DeckOptionalReturn"
+									"$ref": "#/components/schemas/apiSuccessResponse_DeckOptionalReturn_"
 								}
 							}
 						}
@@ -561,8 +681,15 @@
 			"delete": {
 				"operationId": "DeleteDeck",
 				"responses": {
-					"204": {
-						"description": "No content"
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/apiSuccessResponse_null_"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -591,10 +718,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/WordPairEntity"
-									},
-									"type": "array"
+									"$ref": "#/components/schemas/apiSuccessResponse_WordPairEntity-Array_"
 								}
 							}
 						}
@@ -624,10 +748,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/WordPairEntity"
-									},
-									"type": "array"
+									"$ref": "#/components/schemas/apiSuccessResponse_WordPairEntity-Array_"
 								}
 							}
 						}
@@ -670,10 +791,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/WordPairEntity"
-									},
-									"type": "array"
+									"$ref": "#/components/schemas/apiSuccessResponse_WordPairEntity-Array_"
 								}
 							}
 						}
@@ -711,8 +829,15 @@
 			"delete": {
 				"operationId": "DeleteWordpairs",
 				"responses": {
-					"204": {
-						"description": "No content"
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/apiSuccessResponse_null_"
+								}
+							}
+						}
 					}
 				},
 				"tags": [

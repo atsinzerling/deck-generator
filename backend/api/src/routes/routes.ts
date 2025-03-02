@@ -17,6 +17,7 @@ const models: TsoaRoute.Models = {
         "properties": {
             "wordOriginal": {"dataType":"string","required":true},
             "wordTranslation": {"dataType":"string","required":true},
+            "position": {"dataType":"double"},
         },
         "additionalProperties": true,
     },
@@ -28,6 +29,15 @@ const models: TsoaRoute.Models = {
             "languageFrom": {"dataType":"string","required":true},
             "languageTo": {"dataType":"string","required":true},
             "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"},"required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "apiSuccessResponse_LLMDeck_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "data": {"ref":"LLMDeck","required":true},
         },
         "additionalProperties": true,
     },
@@ -49,6 +59,7 @@ const models: TsoaRoute.Models = {
         "properties": {
             "prompt": {"dataType":"string","required":true},
             "history": {"dataType":"array","array":{"dataType":"string"},"required":true},
+            "preserveExistingPairs": {"dataType":"boolean","required":true},
             "currentDeck": {"ref":"LLMDeck","required":true},
         },
         "additionalProperties": true,
@@ -68,6 +79,15 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "apiSuccessResponse_DeckSummary-Array_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "data": {"dataType":"array","array":{"dataType":"refObject","ref":"DeckSummary"},"required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "WordPairEntity": {
         "dataType": "refObject",
         "properties": {
@@ -75,6 +95,7 @@ const models: TsoaRoute.Models = {
             "deckId": {"dataType":"double","required":true},
             "wordOriginal": {"dataType":"string","required":true},
             "wordTranslation": {"dataType":"string","required":true},
+            "position": {"dataType":"double","required":true},
             "createdAt": {"dataType":"string","required":true},
             "lastModified": {"dataType":"string","required":true},
         },
@@ -96,6 +117,15 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "apiSuccessResponse_DeckSummaryOptionalReturn_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "data": {"ref":"DeckSummaryOptionalReturn","required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DeckOptionalReturn": {
         "dataType": "refObject",
         "properties": {
@@ -111,21 +141,18 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DeckCreateInput": {
+    "apiSuccessResponse_DeckOptionalReturn_": {
         "dataType": "refObject",
         "properties": {
-            "name": {"dataType":"string","required":true},
-            "languageFrom": {"dataType":"string","required":true},
-            "languageTo": {"dataType":"string","required":true},
-            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"}},
+            "success": {"dataType":"boolean","required":true},
+            "data": {"ref":"DeckOptionalReturn","required":true},
         },
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DeckUpdateInput": {
+    "DeckCreateInput": {
         "dataType": "refObject",
         "properties": {
-            "id": {"dataType":"double","required":true},
             "name": {"dataType":"string","required":true},
             "languageFrom": {"dataType":"string","required":true},
             "languageTo": {"dataType":"string","required":true},
@@ -141,6 +168,37 @@ const models: TsoaRoute.Models = {
             "deckId": {"dataType":"double"},
             "wordOriginal": {"dataType":"string","required":true},
             "wordTranslation": {"dataType":"string","required":true},
+            "position": {"dataType":"double"},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DeckUpdateInput": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"double","required":true},
+            "name": {"dataType":"string","required":true},
+            "languageFrom": {"dataType":"string","required":true},
+            "languageTo": {"dataType":"string","required":true},
+            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairUpdateInput"}},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "apiSuccessResponse_null_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "data": {"dataType":"enum","enums":[null],"required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "apiSuccessResponse_WordPairEntity-Array_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "data": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairEntity"},"required":true},
         },
         "additionalProperties": true,
     },

@@ -316,6 +316,7 @@ const NewDeck: React.FC = () => {
                   <PreserveToggle 
                     checked={preserveExistingPairs} 
                     onChange={setPreserveExistingPairs} 
+                    disabled={generating}
                   />
                 )}
               </div>

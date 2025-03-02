@@ -56,19 +56,19 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck }) => {
       null,
       2
     );
-    downloadFile(dataStr, `${deck.name} - export.json`, "text/json");
+    downloadFile(dataStr, `${deck.name}.json`, "text/json");
   };
 
   const downloadAsCsv = () => {
     const csvContent =
       `${deck.languageFrom},${deck.languageTo}\n` +
       wordPairs.map((pair) => `${pair.wordOriginal},${pair.wordTranslation}`).join("\n");
-    downloadFile(csvContent, `${deck.name} - export.csv`, "text/csv");
+    downloadFile(csvContent, `${deck.name}.csv`, "text/csv");
   };
 
   const downloadAsText = () => {
     const textContent = getExportText();
-    downloadFile(textContent, `${deck.name} - export.txt`, "text/plain");
+    downloadFile(textContent, `${deck.name}.txt`, "text/plain");
   };
 
   const copyToClipboard = () => {
