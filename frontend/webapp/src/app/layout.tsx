@@ -4,6 +4,7 @@ import "./globals.css";
 import NavigationBar from "@/components/NavigationBar";
 import ClientLayout from "@/components/ClientLayout";
 import CustomScrollArea from "@/components/CustomScrollArea";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,21 @@ export default function RootLayout({
             {children}
           </ClientLayout>
         </CustomScrollArea>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: "#2f2f2f",
+              color: "#ffffff",
+              fontFamily: "inherit",
+            },
+          }}
+          containerStyle={{
+            position: "fixed",
+            zIndex: 51,
+          }}
+        />
       </body>
     </html>
   );
