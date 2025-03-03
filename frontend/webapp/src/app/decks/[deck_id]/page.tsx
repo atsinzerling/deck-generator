@@ -493,8 +493,8 @@ const DeckPage: React.FC = () => {
                 className="relative h-full bg-[#242424] rounded-xl p-6 flex flex-col overflow-auto"
                 style={{
                   maxHeight: leftPaneHeight
-                    ? `max(calc(100vh - 9rem), ${leftPaneHeight}px)`
-                    : "calc(100vh - 9rem)",
+                    ? `max(calc(100vh - 9.1rem), ${leftPaneHeight}px)`
+                    : "calc(100vh - 9.1rem)",
                 }}
               >
               {!loading ? (

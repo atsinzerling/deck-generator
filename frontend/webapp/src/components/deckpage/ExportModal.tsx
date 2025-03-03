@@ -51,7 +51,10 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck }) => {
         name: deck.name,
         languageFrom: deck.languageFrom,
         languageTo: deck.languageTo,
-        wordPairs: wordPairs,
+        wordPairs: wordPairs.map((pair) => ({
+          wordOriginal: pair.wordOriginal,
+          wordTranslation: pair.wordTranslation,
+        })),
       },
       null,
       2
@@ -60,10 +63,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck }) => {
   };
 
   const downloadAsCsv = () => {
+    const BOM = "\uFEFF"; // Prepend BOM to ensure Excel interprets the file as UTF-8
     const csvContent =
       `${deck.languageFrom},${deck.languageTo}\n` +
       wordPairs.map((pair) => `${pair.wordOriginal},${pair.wordTranslation}`).join("\n");
-    downloadFile(csvContent, `${deck.name}.csv`, "text/csv");
+    downloadFile(BOM + csvContent, `${deck.name}.csv`, "text/csv");
   };
 
   const downloadAsText = () => {
@@ -118,7 +122,12 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck }) => {
           </Button>
         </div>
 
-        <div className="text-center text-gray-300 my-0.5 text-lg">or</div>
+        {/* <div className="text-center text-gray-300 my-0.5 text-lg">or</div> */}
+        <div className="flex items-center justify-center">
+          <div className="w-1/3 h-px bg-gray-700"></div>
+          <span className="px-4 text-gray-300">or</span>
+          <div className="w-1/3 h-px bg-gray-700"></div>
+        </div>
 
         {/* Term Separator Options */}
         <div className="space-y-3 mb-3">
@@ -247,7 +256,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ wordPairs, deck }) => {
             </Button>
           </div>
           <Textarea
-            className="w-full h-48 bg-[#1a1a1a] border border-gray-600 rounded-lg p-4 font-mono text-sm text-gray-400 resize-none focus:outline-none"
+            className="w-full h-32 bg-[#1a1a1a] border border-gray-600 rounded-lg p-4 font-mono text-sm text-gray-400 resize-none focus:outline-none"
             readOnly
             value={getExportText()}
           />
