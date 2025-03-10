@@ -11,8 +11,9 @@ import {
   Tags
 } from 'tsoa';
 import { DeckService } from '../services/deck.service';
-import { LLMProvider } from '../services/llm/types';
+import { LLMProvider, LLMModels } from '../services/llm/types';
 import { OpenAIProvider } from '../services/llm/openai';
+import { GeminiProvider } from '../services/llm/gemini';
 import { EXTRACT_NAME_SYSTEM_PROMPT, GENERATE_SYSTEM_PROMPT, getExtractNamePrompt, getGenerateDeckPrompt, getRefineDeckPrompt, REFINE_OVERWRITE_SYSTEM_PROMPT, REFINE_PRESERVE_SYSTEM_PROMPT } from '../config/prompts';
 
 import { BadRequestError} from '../errors';
@@ -53,19 +54,27 @@ function successResponse<T>(data: T): apiSuccessResponse<T> {
 @Tags('Deck')
 export class DeckController extends Controller {
   private deckService: DeckService;
-  private llmProvider: LLMProvider;
+  // private openaiProvider: LLMProvider;
+  private geminiProvider: LLMProvider;
 
   constructor() {
     super();
     // Instantiate the deck service
     this.deckService = new DeckService();
 
-    // Initialize the LLM provider using environment variables.
-    const llmConfig = {
-      apiKey: process.env.OPENAI_API_KEY!,
-      apiUrl: process.env.OPENAI_API_URL!
+    // Initialize the OpenAI provider
+    // const openaiConfig = {
+    //   apiKey: process.env.OPENAI_API_KEY!,
+    //   apiUrl: process.env.OPENAI_API_URL!,
+    //   defaultModel: LLMModels.GPT4O_MINI
+    // };
+    // this.openaiProvider = new OpenAIProvider(openaiConfig);
+    
+    const geminiConfig = {
+      apiKey: process.env.GEMINI_API_KEY!,
+      apiUrl: '', // Not needed for Gemini
     };
-    this.llmProvider = new OpenAIProvider(llmConfig);
+    this.geminiProvider = new GeminiProvider(geminiConfig);
   }
 
   @Post('generate')
@@ -74,9 +83,10 @@ export class DeckController extends Controller {
   ): Promise<apiSuccessResponse<LLMDeck>> {
       // const parsedRequest = GenerateDeckRequestSchema.parse(request);
       
-      const result = await this.llmProvider.generateCompletion(
+      const result = await this.geminiProvider.generateCompletion(
         GENERATE_SYSTEM_PROMPT,
-        getGenerateDeckPrompt(request.languageFrom, request.languageTo, request.pairCount, request.theme, request.additionalPrompt)
+        getGenerateDeckPrompt(request.languageFrom, request.languageTo, request.pairCount, request.theme, request.additionalPrompt),
+        LLMModels.GEMINI_20_FLASH
       );
       const deck: LLMDeck = parseLlmResponse(result);
       
@@ -89,9 +99,10 @@ export class DeckController extends Controller {
   ): Promise<apiSuccessResponse<LLMDeck>> {
       // const parsedRequest = RefineDeckRequestSchema.parse(request);
       const systemPrompt = (request.preserveExistingPairs) ? REFINE_PRESERVE_SYSTEM_PROMPT : REFINE_OVERWRITE_SYSTEM_PROMPT;
-      const result = await this.llmProvider.generateCompletion(
+      const result = await this.geminiProvider.generateCompletion(
         systemPrompt, 
-        getRefineDeckPrompt(request.prompt, request.currentDeck, request.history)
+        getRefineDeckPrompt(request.prompt, request.currentDeck, request.history),
+        LLMModels.GEMINI_20_FLASH
       );
       const refinedDeck: LLMDeck = parseLlmResponse(result);
       
@@ -102,9 +113,10 @@ export class DeckController extends Controller {
   public async extractName(
     @Body() request: ExtractNameRequest
   ): Promise<apiSuccessResponse<ExtractNameResponse>> {
-    const result = await this.llmProvider.generateCompletion(
+    const result = await this.geminiProvider.generateCompletion(
       EXTRACT_NAME_SYSTEM_PROMPT, 
-      getExtractNamePrompt(request.wordpairs)
+      getExtractNamePrompt(request.wordpairs),
+      LLMModels.GEMINI_20_FLASH
     );
     const response: ExtractNameResponse = parseLlmResponse(result);
     return successResponse(response);

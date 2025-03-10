@@ -1,6 +1,6 @@
 // import { Configuration, OpenAIApi } from 'openai';
 import OpenAI from 'openai';
-import { LLMConfig, LLMProvider } from './types';
+import { LLMConfig, LLMProvider, LLMModels } from './types';
 import logger from '../../utils/logger';
 import { LLMError } from '../../errors/LLMError';
 
@@ -15,13 +15,16 @@ export class OpenAIProvider implements LLMProvider {
     });
   }
 
-  async generateCompletion(systemPrompt: string, userPrompt: string): Promise<string> {
+  async generateCompletion(systemPrompt: string, userPrompt: string, model?: LLMModels): Promise<string> {
     try {
       // logger.debug(`OpenAI Request - System Prompt: ${systemPrompt}`);
       logger.debug(`OpenAI Request - User Prompt: ${userPrompt}`);
+      const useModel = model;
+      
+      logger.info(`Using OpenAI model: ${useModel}`);
 
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: useModel as string,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
