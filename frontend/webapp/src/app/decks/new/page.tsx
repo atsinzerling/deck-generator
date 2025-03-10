@@ -58,6 +58,9 @@ const NewDeck: React.FC = () => {
         handleFile(acceptedFiles[0]);
       }
     },
+    onDropRejected: () => {
+      toast.error("Only CSV and JSON files are supported");
+    },
     accept: {
       'text/csv': ['.csv'],
       'application/json': ['.json'],
@@ -332,7 +335,7 @@ const NewDeck: React.FC = () => {
             <div className="flex border-b border-gray-700 mb-6">
               {(!secondStage || selectedTab === "generate") && (
                 <button
-                  className={`px-4 py-2 font-medium text-sm ${
+                  className={`px-4 py-2 font-medium text-md ${
                     selectedTab === "generate"
                       ? "text-[#4f46e5] border-b-2 border-[#4f46e5]"
                       : "hover:text-gray-200"
@@ -344,7 +347,7 @@ const NewDeck: React.FC = () => {
               )}
               {(!secondStage || selectedTab === "import") && (
                 <button
-                  className={`px-4 py-2 font-medium text-sm ${
+                  className={`px-4 py-2 font-medium text-md ${
                     selectedTab === "import"
                       ? "text-[#4f46e5] border-b-2 border-[#4f46e5]"
                       : "hover:text-gray-200"
@@ -533,10 +536,10 @@ const NewDeck: React.FC = () => {
                       >
                         <input {...getInputProps()} />
                         <i className="fas fa-file-upload text-3xl mb-3 text-gray-400"></i>
-                        <p className="mb-2">
+                        <div className="mb-2">
                           Drop CSV or JSON file here
                           <FormatInfoTooltip className="ml-1" />
-                        </p>
+                        </div>
                         <p className="text-sm text-gray-400">or click to browse</p>
                       </div>
 

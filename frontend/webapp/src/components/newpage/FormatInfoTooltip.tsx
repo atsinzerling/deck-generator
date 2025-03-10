@@ -40,9 +40,9 @@ const FormatInfoTooltip: React.FC<FormatInfoTooltipProps> = ({ className = "" })
               </table>
             </div>
           </div>
-          <div className="col-span-1 pl-2">
+          <div className="col-span-1 pl-0">
             <div className="font-semibold mb-2">JSON Format</div>
-            <pre className="bg-[#1a1a1a] p-2 rounded text-xs text-left whitespace-pre">
+            <pre className="bg-[#1a1a1a] p-2 rounded text-xs text-left whitespace-pre -ml-1">
 {`{"name": "deck_name",
  "languageFrom": "src_lng",
  "languageTo": "target_lng",
