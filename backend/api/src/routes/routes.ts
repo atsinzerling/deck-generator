@@ -65,6 +65,33 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ExtractNameResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "name": {"dataType":"string","required":true},
+            "languageFrom": {"dataType":"string","required":true},
+            "languageTo": {"dataType":"string","required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "apiSuccessResponse_ExtractNameResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "data": {"ref":"ExtractNameResponse","required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ExtractNameRequest": {
+        "dataType": "refObject",
+        "properties": {
+            "wordpairs": {"dataType":"array","array":{"dataType":"refObject","ref":"WordPairInput"},"required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DeckSummary": {
         "dataType": "refObject",
         "properties": {
@@ -269,6 +296,36 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'refineDeck',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsDeckController_extractName: Record<string, TsoaRoute.ParameterSchema> = {
+                request: {"in":"body","name":"request","required":true,"ref":"ExtractNameRequest"},
+        };
+        app.post('/decks/extract-name',
+            ...(fetchMiddlewares<RequestHandler>(DeckController)),
+            ...(fetchMiddlewares<RequestHandler>(DeckController.prototype.extractName)),
+
+            async function DeckController_extractName(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsDeckController_extractName, request, response });
+
+                const controller = new DeckController();
+
+              await templateService.apiHandler({
+                methodName: 'extractName',
                 controller,
                 response,
                 next,

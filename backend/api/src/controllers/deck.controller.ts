@@ -13,7 +13,7 @@ import {
 import { DeckService } from '../services/deck.service';
 import { LLMProvider } from '../services/llm/types';
 import { OpenAIProvider } from '../services/llm/openai';
-import { GENERATE_SYSTEM_PROMPT, getGenerateDeckPrompt, getRefineDeckPrompt, REFINE_OVERWRITE_SYSTEM_PROMPT, REFINE_PRESERVE_SYSTEM_PROMPT } from '../config/prompts';
+import { EXTRACT_NAME_SYSTEM_PROMPT, GENERATE_SYSTEM_PROMPT, getExtractNamePrompt, getGenerateDeckPrompt, getRefineDeckPrompt, REFINE_OVERWRITE_SYSTEM_PROMPT, REFINE_PRESERVE_SYSTEM_PROMPT } from '../config/prompts';
 
 import { BadRequestError} from '../errors';
 import { parseLlmResponse } from '../utils/llm';
@@ -36,7 +36,9 @@ import {
   GenerateDeckRequest,
   RefineDeckRequest,
   DeckSummary,
-  apiSuccessResponse
+  apiSuccessResponse,
+  ExtractNameRequest,
+  ExtractNameResponse
 } from '../types/deck';
 
 function successResponse<T>(data: T): apiSuccessResponse<T> {
@@ -94,6 +96,18 @@ export class DeckController extends Controller {
       const refinedDeck: LLMDeck = parseLlmResponse(result);
       
       return successResponse(refinedDeck);
+  }
+
+  @Post('extract-name')
+  public async extractName(
+    @Body() request: ExtractNameRequest
+  ): Promise<apiSuccessResponse<ExtractNameResponse>> {
+    const result = await this.llmProvider.generateCompletion(
+      EXTRACT_NAME_SYSTEM_PROMPT, 
+      getExtractNamePrompt(request.wordpairs)
+    );
+    const response: ExtractNameResponse = parseLlmResponse(result);
+    return successResponse(response);
   }
 
   @Get('/')

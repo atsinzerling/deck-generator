@@ -1,4 +1,4 @@
-import { LLMDeck } from "../types/deck";
+import { LLMDeck, WordPairInput } from "../types/deck";
 
 export const GENERATE_SYSTEM_PROMPT = `You are a language learning expert AI that creates vocabulary decks. 
 You must respond ONLY with a JSON object in the following format:
@@ -62,4 +62,20 @@ export function getGenerateDeckPrompt(languageFrom: string, languageTo: string, 
 
 export function getRefineDeckPrompt(prompt: string, currentDeck: LLMDeck, history: string[]) {
   return `Refine given deck given the deck details, conversation history and user refinement request. Current deck: ${JSON.stringify(currentDeck)}\n\nConversation history: ${JSON.stringify(history)}\n\nRefinement request: ${prompt}`;
+}
+
+export const EXTRACT_NAME_SYSTEM_PROMPT = `You are a language learning expert AI that analyzes vocabulary wordpairs.
+Your task is to extract metadata from a list of word pairs.
+You must respond ONLY with a JSON object in the following format:
+{
+  "name": "short descriptive name for this collection of words",
+  "languageFrom": "source language of original words",
+  "languageTo": "target language of translated words"
+}
+Do not include any other text than perfectly parseable JSON object.
+Determine the languages by analyzing the word pairs.
+Create a concise thematic name that represents the collection of words.`;
+
+export function getExtractNamePrompt(wordpairs: WordPairInput[]) {
+  return `Extract the name of the deck, languageFrom and languageTo from the following word pairs: ${JSON.stringify(wordpairs)}`;
 }

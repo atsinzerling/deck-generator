@@ -127,6 +127,57 @@
 				"type": "object",
 				"additionalProperties": true
 			},
+			"ExtractNameResponse": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"languageFrom": {
+						"type": "string"
+					},
+					"languageTo": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"languageFrom",
+					"languageTo"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"apiSuccessResponse_ExtractNameResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ExtractNameResponse"
+					}
+				},
+				"required": [
+					"success",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"ExtractNameRequest": {
+				"properties": {
+					"wordpairs": {
+						"items": {
+							"$ref": "#/components/schemas/WordPairInput"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"wordpairs"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
 			"DeckSummary": {
 				"description": "DeckSummary extends DeckEntity with the computed wordpairCount.\nThis type is ideal for list endpoints where a count is necessary.",
 				"properties": {
@@ -540,6 +591,38 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/RefineDeckRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/decks/extract-name": {
+			"post": {
+				"operationId": "ExtractName",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/apiSuccessResponse_ExtractNameResponse_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Deck"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ExtractNameRequest"
 							}
 						}
 					}

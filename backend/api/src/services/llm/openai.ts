@@ -11,7 +11,7 @@ export class OpenAIProvider implements LLMProvider {
     // Initialize OpenAI with the provided configuration
     this.openai = new OpenAI({
       apiKey: config.apiKey,
-      baseURL: config.apiUrl, // Include if apiUrl is provided
+      baseURL: config.apiUrl,
     });
   }
 
@@ -21,18 +21,22 @@ export class OpenAIProvider implements LLMProvider {
       logger.debug(`OpenAI Request - User Prompt: ${userPrompt}`);
 
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini', // Ensure the model name is correct
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 4000,
-        store: true, // Include if needed based on your requirements
+        max_tokens: 8000,
+        store: false,
       });
 
       const message = completion.choices[0].message;
       const content = message?.content?.trim();
       logger.debug(`OpenAI Response: ${content}`);
+      
+      if (completion.usage) {
+        logger.info(`Token usage - Input: ${completion.usage.prompt_tokens}, Output: ${completion.usage.completion_tokens}, Total: ${completion.usage.total_tokens}`);
+      }
 
       return content || '';
     } catch (error: any) {
