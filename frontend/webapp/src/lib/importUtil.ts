@@ -1,4 +1,5 @@
 import { WordPairSummary } from "@/types/decks";
+import Papa from 'papaparse';  // You'll need to install this: npm install papaparse @types/papaparse
 
 export interface ImportResult {
   wordPairs: WordPairSummary[];
@@ -46,69 +47,36 @@ export function parseJSONFile(content: string): ImportResult {
 
 // Parse CSV file
 export function parseCSVFile(content: string, filename: string): ImportResult {
+  const parseResult = Papa.parse(content, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: (header) => header.trim()
+  });
   
-    const lines = content.split(/\r?\n/).filter(line => line.trim());
-    
-    if (lines.length < 2) {
-      throw new Error("CSV file must contain at least a header row and one data row");
-    }
-    
-    const header = parseCSVRow(lines[0]);
-    if (header.length < 2) {
-      throw new Error("CSV header must contain at least two columns");
-    }
-    
-    const languageFrom = header[0];
-    const languageTo = header[1];
-    
-    const wordPairs: WordPairSummary[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      
-      const row = parseCSVRow(lines[i]);
-      if (row.length >= 2 && (row[0] || row[1])) {
-        wordPairs.push({
-          wordOriginal: row[0],
-          wordTranslation: row[1],
-          position: wordPairs.length + 1,
-        });
-      }
-    }
-    
-    const name = filename.replace(/\.[^/.]+$/, "");
-    
-    return { wordPairs, name, languageFrom, languageTo };
-}
-
-// Helper function to parse CSV row, handling quotes properly
-function parseCSVRow(row: string): string[] {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < row.length; i++) {
-    const char = row[i];
-    
-    if (char === '"') {
-      if (inQuotes && i + 1 < row.length && row[i + 1] === '"') {
-        // Double quotes inside quotes = escaped quote
-        current += '"';
-        i++;
-      } else {
-        // Toggle quote mode
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      // End of field
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
+  if (parseResult.errors.length > 0) {
+    throw new Error(`CSV parsing error: ${parseResult.errors[0].message}`);
+  }
+  if (!parseResult.meta.fields) {
+    throw new Error("CSV header is missing");
+  }
+  if (parseResult.meta.fields.length < 2) {
+    throw new Error("CSV header must contain at least two columns");
   }
   
-  result.push(current.trim());
-  return result;
+  const languageFrom = parseResult.meta.fields[0];
+  const languageTo = parseResult.meta.fields[1];
+  
+  const wordPairs: WordPairSummary[] = parseResult.data
+    .filter((row: any) => row[languageFrom] || row[languageTo])
+    .map((row: any, index: number) => ({
+      wordOriginal: row[languageFrom] || "",
+      wordTranslation: row[languageTo] || "",
+      position: index + 1,
+    }));
+  
+  const name = filename.replace(/\.[^/.]+$/, "");
+  
+  return { wordPairs, name, languageFrom, languageTo };
 }
 
 // Detect file type and parse accordingly

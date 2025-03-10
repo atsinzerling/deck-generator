@@ -14,11 +14,14 @@ import {
   faMagicWandSparkles,
   faPaste,
   faFileImport,
+  faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { PreserveToggle } from "@/components/PreserveToggle";
 import toast from "react-hot-toast";
 import { parseTextIntoWordPairs, parseImportFile } from "@/lib/importUtil";
 import { cn } from "@/lib/utils";
+import { useDropzone } from 'react-dropzone';
+import { FormatInfoTooltip } from "@/components/newpage/FormatInfoTooltip";
 
 const NewDeck: React.FC = () => {
   const [deckName, setDeckName] = useState("");
@@ -39,7 +42,6 @@ const NewDeck: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<"generate" | "import">(
     "generate"
   );
-  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const [importText, setImportText] = useState("");
   const [termSeparator, setTermSeparator] = useState("tab");
@@ -49,6 +51,19 @@ const NewDeck: React.FC = () => {
 
   const leftPaneRef = useRef<HTMLDivElement>(null);
   const [leftPaneHeight, setLeftPaneHeight] = useState<number | null>(null);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (acceptedFiles) => {
+      if (acceptedFiles && acceptedFiles.length > 0) {
+        handleFile(acceptedFiles[0]);
+      }
+    },
+    accept: {
+      'text/csv': ['.csv'],
+      'application/json': ['.json'],
+      // 'text/plain': ['.txt'],
+    }
+  });
 
   useEffect(() => {
     setWordPairs(parseImportText(importText));
@@ -228,46 +243,6 @@ const NewDeck: React.FC = () => {
     setSecondStage(true);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result;
-        if (typeof text === "string") {
-          try {
-            const result = parseImportFile(text, file.name);
-        
-            if (result.wordPairs.length > 0) {
-              setWordPairs(result.wordPairs);
-              setDeckName(result.name);
-              setFromLanguage(result.languageFrom);
-              setToLanguage(result.languageTo);
-              handleContinue();
-            } else {
-              toast.error("No valid word pairs found in the file");
-            }
-          } catch (error) {
-            toast.error("Failed to parse file: " + (error instanceof Error ? error.message : "Unknown error"));
-          }
-        }
-      };
-      reader.readAsText(file);
-      e.dataTransfer.clearData();
-    }
-  };
-
   const handlePasteFromClipboard = () => {
     navigator.clipboard.readText().then((text) => {
       setImportText(text);
@@ -299,6 +274,49 @@ const NewDeck: React.FC = () => {
       router.push(`/decks/${data.id}`);
     }
     setGenerating(false);
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      
+      // Insert tab character at cursor position
+      const newValue = textarea.value.substring(0, start) + '\t' + textarea.value.substring(end);
+      setImportText(newValue);
+      
+      // Move cursor after the inserted tab
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+      }, 0);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result;
+      if (typeof text === "string") {
+        try {
+          const result = parseImportFile(text, file.name);
+        
+          if (result.wordPairs.length > 0) {
+            setWordPairs(result.wordPairs);
+            setDeckName(result.name);
+            setFromLanguage(result.languageFrom);
+            setToLanguage(result.languageTo);
+            handleContinue();
+          } else {
+            toast.error("No valid word pairs found in the file");
+          }
+        } catch (error) {
+          toast.error("Failed to parse file: " + (error instanceof Error ? error.message : "Unknown error"));
+        }
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -505,183 +523,186 @@ const NewDeck: React.FC = () => {
                 <div className="space-y-6">
                   {!secondStage ? (
                     <>
-                  <div
-                    className={`border-2 border-dashed rounded-lg p-8 text-center ${
-                      isDragging
-                        ? "border-[#4f46e5] bg-[#4f46e5]/10"
-                        : "border-gray-600"
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleFileDrop}
-                  >
-                    <i className="fas fa-file-upload text-3xl mb-3 text-gray-400"></i>
-                    <p className="mb-2">Drop CSV or JSON file here</p>
-                    <p className="text-sm text-gray-400">or click to browse</p>
-                  </div>
-
-                  <div className="flex items-center justify-center">
-                    <div className="w-1/3 h-px bg-gray-700"></div>
-                    <span className="px-4 text-gray-400">or</span>
-                    <div className="w-1/3 h-px bg-gray-700"></div>
-                  </div>
-
-                  {/* Export Text Area and Actions */}
-                  <div className="relative">
-                    <div className="absolute top-3 right-4 flex gap-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handlePasteFromClipboard}
+                      <div
+                        {...getRootProps()}
+                        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer ${
+                          isDragActive
+                            ? "border-[#4f46e5] bg-[#4f46e5]/10"
+                            : "border-gray-600"
+                        }`}
                       >
-                        <FontAwesomeIcon
-                          icon={faPaste}
-                          className="h-4 w-4 text-gray-400"
-                        />
-                      </Button>
-                    </div>
-                    <Textarea
-                      className="w-full h-32 bg-[#1a1a1a] border border-gray-600 rounded-lg p-4 font-mono text-sm text-gray-400 resize-none focus:outline-none"
-                      placeholder="Paste your deck data here..."
-                      value={importText}
-                      onChange={(e) => {
-                        setImportText(e.target.value);
-                      }} // parse into wordpairs
-                    />
-                  </div>
+                        <input {...getInputProps()} />
+                        <i className="fas fa-file-upload text-3xl mb-3 text-gray-400"></i>
+                        <p className="mb-2">
+                          Drop CSV or JSON file here
+                          <FormatInfoTooltip className="ml-1" />
+                        </p>
+                        <p className="text-sm text-gray-400">or click to browse</p>
+                      </div>
 
-                  {/* Term Separator Options */}
-                  <div className="space-y-3 mb-3">
-                    <h3 className="text-sm font-medium text-gray-300">
-                      Term separator
-                    </h3>
-                    <div className="flex gap-3">
-                      <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
-                        <input
-                          type="radio"
-                          name="termSeparator"
-                          value="tab"
-                          checked={termSeparator === "tab"}
-                          onChange={(e) => setTermSeparator(e.target.value)}
-                          className="hidden"
-                        />
-                        <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
-                          {termSeparator === "tab" && (
-                            <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
-                          )}
-                        </div>
-                        <span className="text-sm text-white">Tab</span>
-                      </label>
-                      <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
-                        <input
-                          type="radio"
-                          name="termSeparator"
-                          value="comma"
-                          checked={termSeparator === "comma"}
-                          onChange={(e) => setTermSeparator(e.target.value)}
-                          className="hidden"
-                        />
-                        <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
-                          {termSeparator === "comma" && (
-                            <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
-                          )}
-                        </div>
-                        <span className="text-sm text-white">Comma</span>
-                      </label>
-                      <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
-                        <input
-                          type="radio"
-                          name="termSeparator"
-                          value="custom"
-                          checked={termSeparator === "custom"}
-                          onChange={(e) => setTermSeparator(e.target.value)}
-                          className="hidden"
-                        />
-                        <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
-                          {termSeparator === "custom" && (
-                            <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
-                          )}
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Custom"
-                          value={customTermSeparator}
-                          onChange={(e) => {
-                            setTermSeparator("custom");
-                            setCustomTermSeparator(e.target.value);
-                          }}
-                          className="bg-transparent border-b border-gray-600 w-20 text-sm text-white placeholder-white focus:outline-none focus:border-gray-400"
-                        />
-                      </label>
-                    </div>
-                  </div>
+                      <div className="flex items-center justify-center">
+                        <div className="w-1/3 h-px bg-gray-700"></div>
+                        <span className="px-4 text-gray-400">or</span>
+                        <div className="w-1/3 h-px bg-gray-700"></div>
+                      </div>
 
-                  {/* Row Separator Options */}
-                  <div className="space-y-3 mb-3">
-                    <h3 className="text-sm font-medium text-gray-300">
-                      Row separator
-                    </h3>
-                    <div className="flex gap-3">
-                      <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
-                        <input
-                          type="radio"
-                          name="rowSeparator"
-                          value="newline"
-                          checked={rowSeparator === "newline"}
-                          onChange={(e) => setRowSeparator(e.target.value)}
-                          className="hidden"
-                        />
-                        <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
-                          {rowSeparator === "newline" && (
-                            <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
-                          )}
+                      {/* Export Text Area and Actions */}
+                      <div className="relative">
+                        <div className="absolute top-3 right-4 flex gap-3">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handlePasteFromClipboard}
+                          >
+                            <FontAwesomeIcon
+                              icon={faPaste}
+                              className="h-4 w-4 text-gray-400"
+                            />
+                          </Button>
                         </div>
-                        <span className="text-sm text-white">New line</span>
-                      </label>
-                      <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
-                        <input
-                          type="radio"
-                          name="rowSeparator"
-                          value="semicolon"
-                          checked={rowSeparator === "semicolon"}
-                          onChange={(e) => setRowSeparator(e.target.value)}
-                          className="hidden"
-                        />
-                        <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
-                          {rowSeparator === "semicolon" && (
-                            <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
-                          )}
-                        </div>
-                        <span className="text-sm text-white">Semicolon</span>
-                      </label>
-                      <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
-                        <input
-                          type="radio"
-                          name="rowSeparator"
-                          value="custom"
-                          checked={rowSeparator === "custom"}
-                          onChange={(e) => setRowSeparator(e.target.value)}
-                          className="hidden"
-                        />
-                        <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
-                          {rowSeparator === "custom" && (
-                            <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
-                          )}
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Custom"
-                          value={customRowSeparator}
+                        <Textarea
+                          className="w-full h-32 bg-[#1a1a1a] border border-gray-600 rounded-lg p-4 font-mono text-sm text-gray-400 resize-none focus:outline-none"
+                          placeholder="Paste your deck data here..."
+                          value={importText}
                           onChange={(e) => {
-                            setRowSeparator("custom");
-                            setCustomRowSeparator(e.target.value);
+                            setImportText(e.target.value);
                           }}
-                          className="bg-transparent border-b border-gray-600 w-20 text-sm text-white placeholder-white focus:outline-none focus:border-gray-400"
+                          onKeyDown={handleTextareaKeyDown}
                         />
-                      </label>
-                    </div>
-                  </div> 
-                  </>
+                      </div>
+
+                      {/* Term Separator Options */}
+                      <div className="space-y-3 mb-3">
+                        <h3 className="text-sm font-medium text-gray-300">
+                          Term separator
+                        </h3>
+                        <div className="flex gap-3">
+                          <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
+                            <input
+                              type="radio"
+                              name="termSeparator"
+                              value="tab"
+                              checked={termSeparator === "tab"}
+                              onChange={(e) => setTermSeparator(e.target.value)}
+                              className="hidden"
+                            />
+                            <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                              {termSeparator === "tab" && (
+                                <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
+                              )}
+                            </div>
+                            <span className="text-sm text-white">Tab</span>
+                          </label>
+                          <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
+                            <input
+                              type="radio"
+                              name="termSeparator"
+                              value="comma"
+                              checked={termSeparator === "comma"}
+                              onChange={(e) => setTermSeparator(e.target.value)}
+                              className="hidden"
+                            />
+                            <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                              {termSeparator === "comma" && (
+                                <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
+                              )}
+                            </div>
+                            <span className="text-sm text-white">Comma</span>
+                          </label>
+                          <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
+                            <input
+                              type="radio"
+                              name="termSeparator"
+                              value="custom"
+                              checked={termSeparator === "custom"}
+                              onChange={(e) => setTermSeparator(e.target.value)}
+                              className="hidden"
+                            />
+                            <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                              {termSeparator === "custom" && (
+                                <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
+                              )}
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Custom"
+                              value={customTermSeparator}
+                              onChange={(e) => {
+                                setTermSeparator("custom");
+                                setCustomTermSeparator(e.target.value);
+                              }}
+                              className="bg-transparent border-b border-gray-600 w-20 text-sm text-white placeholder-white focus:outline-none focus:border-gray-400"
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Row Separator Options */}
+                      <div className="space-y-3 mb-3">
+                        <h3 className="text-sm font-medium text-gray-300">
+                          Row separator
+                        </h3>
+                        <div className="flex gap-3">
+                          <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
+                            <input
+                              type="radio"
+                              name="rowSeparator"
+                              value="newline"
+                              checked={rowSeparator === "newline"}
+                              onChange={(e) => setRowSeparator(e.target.value)}
+                              className="hidden"
+                            />
+                            <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                              {rowSeparator === "newline" && (
+                                <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
+                              )}
+                            </div>
+                            <span className="text-sm text-white">New line</span>
+                          </label>
+                          <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
+                            <input
+                              type="radio"
+                              name="rowSeparator"
+                              value="semicolon"
+                              checked={rowSeparator === "semicolon"}
+                              onChange={(e) => setRowSeparator(e.target.value)}
+                              className="hidden"
+                            />
+                            <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                              {rowSeparator === "semicolon" && (
+                                <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
+                              )}
+                            </div>
+                            <span className="text-sm text-white">Semicolon</span>
+                          </label>
+                          <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-lg cursor-pointer">
+                            <input
+                              type="radio"
+                              name="rowSeparator"
+                              value="custom"
+                              checked={rowSeparator === "custom"}
+                              onChange={(e) => setRowSeparator(e.target.value)}
+                              className="hidden"
+                            />
+                            <div className="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center">
+                              {rowSeparator === "custom" && (
+                                <div className="w-2 h-2 rounded-full bg-[#4f46e5]" />
+                              )}
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Custom"
+                              value={customRowSeparator}
+                              onChange={(e) => {
+                                setRowSeparator("custom");
+                                setCustomRowSeparator(e.target.value);
+                              }}
+                              className="bg-transparent border-b border-gray-600 w-20 text-sm text-white placeholder-white focus:outline-none focus:border-gray-400"
+                            />
+                          </label>
+                        </div>
+                      </div> 
+                    </>
                   ) : (
                     <div className="space-y-4">
                     <div className="flex gap-4">
@@ -785,8 +806,8 @@ const NewDeck: React.FC = () => {
                   !secondStage && selectedTab === "generate" ? [] : wordPairs
                 }
                 generating={generating}
-                emptyMessage1="Generated word pairs will appear here"
-                emptyMessage2="Fill in the form and click Generate to create your custom language learning deck"
+                emptyMessage1={selectedTab === "generate" ? "Generated word pairs will appear here" : "Imported word pairs will appear here"}
+                emptyMessage2={selectedTab === "generate" ? "Fill in the form and click Generate to create your custom language learning deck" : "Drop a CSV or JSON file to import your word pairs"}
               />
             </div>
           </div>
