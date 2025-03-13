@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaste } from "@fortawesome/free-solid-svg-icons";
 import { FormatInfoTooltip } from "./FormatInfoTooltip";
 import { api } from "@/lib/api";
-import { Circles, MutatingDots } from "react-loader-spinner";
+import { DotLoader } from "react-spinners";
 
 interface ImportPaneProps {
   secondStage: boolean;
@@ -363,17 +363,14 @@ const ImportPane: React.FC<ImportPaneProps> = ({
             <div className="w-1/2 space-y-2">
               <label className="block text-sm font-medium flex items-center">
                 From Language
-                {extractingName && (
-                  <div className="ml-2">
-                    <Circles
-                      height="16"
-                      width="16"
-                      color="#4f46e5"
-                      ariaLabel="extracting-language"
-                      visible={true}
-                    />
-                  </div>
-                )}
+                <div className="ml-2">
+                  <DotLoader
+                    color="#4f46e5"
+                    size={16}
+                    speedMultiplier={1}
+                    loading={extractingName}
+                  />
+                </div>
               </label>
               <Input
                 type="text"
@@ -388,17 +385,14 @@ const ImportPane: React.FC<ImportPaneProps> = ({
             <div className="w-1/2 space-y-2">
               <label className="block text-sm font-medium flex items-center">
                 To Language
-                {extractingName && (
-                  <div className="ml-2">
-                    <Circles
-                      height="16"
-                      width="16"
-                      color="#4f46e5"
-                      ariaLabel="extracting-language"
-                      visible={true}
-                    />
-                  </div>
-                )}
+                <div className="ml-2">
+                  <DotLoader
+                    color="#4f46e5"
+                    size={16}
+                    speedMultiplier={1}
+                    loading={extractingName}
+                  />
+                </div>
               </label>
               <Input
                 type="text"
@@ -414,26 +408,12 @@ const ImportPane: React.FC<ImportPaneProps> = ({
           <div className="space-y-2">
             <label className="block text-sm font-medium flex items-center">
               Deck Name
-              {extractingName && (
-                <div className="ml-2">
-                  <Circles
-                    height="16"
-                    width="16"
-                    color="#4f46e5"
-                    ariaLabel="extracting-name"
-                    visible={true}
-                  />
-                </div>
-              )}
               <div className="ml-2">
-                  <MutatingDots
-                    height="14"
-                    width="14"
-                    radius="2"
+                  <DotLoader
                     color="#4f46e5"
-                    secondaryColor="#4f46e5"
-                    ariaLabel="extracting-name"
-                    visible={true}
+                    size={16}
+                    speedMultiplier={1}
+                    loading={extractingName}
                   />
                 </div>
             </label>

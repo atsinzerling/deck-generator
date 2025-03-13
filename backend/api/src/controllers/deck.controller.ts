@@ -115,7 +115,7 @@ export class DeckController extends Controller {
   public async extractName(
     @Body() request: ExtractNameRequest
   ): Promise<apiSuccessResponse<ExtractNameResponse>> {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // await new Promise(resolve => setTimeout(resolve, 1500));
     const result = await this.geminiProvider.generateCompletion(
       EXTRACT_NAME_SYSTEM_PROMPT, 
       getExtractNamePrompt(request.wordpairs),
