@@ -24,3 +24,7 @@ CREATE USER pguser WITH PASSWORD '';
 GRANT ALL PRIVILEGES ON DATABASE deckgen TO pguser;
 \q
 exit
+
+start postgre:
+
+sudo service postgresql start

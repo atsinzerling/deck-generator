@@ -130,3 +130,13 @@ export interface RefineDeckRequest {
   preserveExistingPairs: boolean;
   currentDeck: LLMDeck;
 } 
+
+export interface ExtractNameRequest {
+  wordpairs: WordPairInput[];
+}
+
+export interface ExtractNameResponse {
+  name: string;
+  languageFrom: string;
+  languageTo: string;
+}

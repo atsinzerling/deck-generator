@@ -41,6 +41,8 @@ import {
   ExtractNameRequest,
   ExtractNameResponse
 } from '../types/deck';
+import { TIMEOUT } from 'dns';
+import { time } from 'console';
 
 function successResponse<T>(data: T): apiSuccessResponse<T> {
   return {
@@ -113,6 +115,7 @@ export class DeckController extends Controller {
   public async extractName(
     @Body() request: ExtractNameRequest
   ): Promise<apiSuccessResponse<ExtractNameResponse>> {
+    await new Promise(resolve => setTimeout(resolve, 500));
     const result = await this.geminiProvider.generateCompletion(
       EXTRACT_NAME_SYSTEM_PROMPT, 
       getExtractNamePrompt(request.wordpairs),

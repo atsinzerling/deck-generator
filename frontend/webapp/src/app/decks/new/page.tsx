@@ -15,6 +15,8 @@ import {
   faPaste,
   faFileImport,
   faQuestionCircle,
+  faTimes,
+  faUndo,
 } from "@fortawesome/free-solid-svg-icons";
 import { PreserveToggle } from "@/components/PreserveToggle";
 import toast from "react-hot-toast";
@@ -37,7 +39,7 @@ const NewDeck: React.FC = () => {
 
   const leftPaneRef = useRef<HTMLDivElement>(null);
   const [leftPaneHeight, setLeftPaneHeight] = useState<number | null>(null);
-
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -82,6 +84,15 @@ const NewDeck: React.FC = () => {
     setGenerating(false);
   };
 
+  const handleReset = () => {
+    setWordPairs([]);
+    setSecondStage(false);
+    setDeckName("");
+    setFromLanguage("");
+    setToLanguage("");
+    setTheme("");
+    setResetKey(prevKey => prevKey + 1);
+  };
 
   return (
     <div className="min-h-[calc(100vh-4.55rem)] w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
@@ -123,6 +134,7 @@ const NewDeck: React.FC = () => {
 
             {selectedTab === "generate" && (
               <GeneratePane
+                key={`generate-${resetKey}`}
                 secondStage={secondStage}
                 setSecondStage={setSecondStage}
                 generating={generating}
@@ -145,7 +157,9 @@ const NewDeck: React.FC = () => {
             )}
             {selectedTab === "import" && (
               <ImportPane
+                key={`import-${resetKey}`}
                 secondStage={secondStage}
+                setSecondStage={setSecondStage}
                 generating={generating}
                 fromLanguage={fromLanguage}
                 setFromLanguage={setFromLanguage}
@@ -155,7 +169,6 @@ const NewDeck: React.FC = () => {
                 setDeckName={setDeckName}
                 wordPairs={wordPairs}
                 setWordPairs={setWordPairs}
-                onContinue={() => setSecondStage(true)}
                 handleSave={handleSave}
                 onCancel={() => router.push("/dashboard")}
               />
@@ -172,13 +185,25 @@ const NewDeck: React.FC = () => {
                   : "calc(100vh - 9.1rem)",
               }}
             >
+              {wordPairs.length > 0 && (
+                <div className="flex justify-between items-center mb-4">
+                  <h1 className="text-2xl font-medium">Word Pairs Preview</h1>
+                  <button
+                    onClick={handleReset}
+                    className="text-gray-400 hover:text-white"
+                    title="Reset word pairs"
+                  >
+                    <FontAwesomeIcon icon={faUndo} className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
               <WordPairList
                 wordPairs={
                   !secondStage && selectedTab === "generate" ? [] : wordPairs
                 }
                 generating={generating}
                 emptyMessage1={selectedTab === "generate" ? "Generated word pairs will appear here" : "Imported word pairs will appear here"}
-                emptyMessage2={selectedTab === "generate" ? "Fill in the form and click Generate to create your custom language learning deck" : "Drop a CSV or JSON file to import your word pairs"}
+                emptyMessage2={selectedTab === "generate" ? "Fill in the form and click Generate to create your custom language learning deck" : "Drop a CSV or JSON file and we will extract your word pairs"}
               />
             </div>
           </div>

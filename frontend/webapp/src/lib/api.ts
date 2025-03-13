@@ -9,7 +9,9 @@ import {
   LLMDeck,
   GenerateDeckRequest,
   RefineDeckRequest,
-  DeckSummary
+  DeckSummary,
+  ExtractNameRequest,
+  ExtractNameResponse,
 } from '../types/decks';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -79,6 +81,10 @@ export const api = {
       body: JSON.stringify(request),
     }),
     refineDeck: (request: RefineDeckRequest) => apiRequest<LLMDeck>('/api/decks/refine', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+    extractName: (request: ExtractNameRequest) => apiRequest<ExtractNameResponse>('/api/decks/extract-name', {
       method: 'POST',
       body: JSON.stringify(request),
     }),

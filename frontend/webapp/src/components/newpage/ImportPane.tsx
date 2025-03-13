@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { parseTextIntoWordPairs, parseImportFile } from "@/lib/importUtil";
-import { WordPairSummary } from "@/types/decks";
+import { ExtractNameRequest, WordPairSummary } from "@/types/decks";
 import { useDropzone } from "react-dropzone";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
@@ -10,9 +10,12 @@ import { Textarea } from "@/components/ui/Textarea";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaste } from "@fortawesome/free-solid-svg-icons";
 import { FormatInfoTooltip } from "./FormatInfoTooltip";
+import { api } from "@/lib/api";
+import { Circles, MutatingDots } from "react-loader-spinner";
 
 interface ImportPaneProps {
   secondStage: boolean;
+  setSecondStage: (val: boolean) => void;
   generating: boolean;
   fromLanguage: string;
   setFromLanguage: (val: string) => void;
@@ -22,13 +25,13 @@ interface ImportPaneProps {
   setDeckName: (val: string) => void;
   wordPairs: WordPairSummary[];
   setWordPairs: (pairs: WordPairSummary[]) => void;
-  onContinue: () => void; 
   handleSave: () => void;
   onCancel: () => void;
 }
 
 const ImportPane: React.FC<ImportPaneProps> = ({
   secondStage,
+  setSecondStage,
   generating,
   fromLanguage,
   setFromLanguage,
@@ -38,7 +41,6 @@ const ImportPane: React.FC<ImportPaneProps> = ({
   setDeckName,
   wordPairs,
   setWordPairs,
-  onContinue,
   handleSave,
   onCancel,
 }) => {
@@ -47,6 +49,8 @@ const ImportPane: React.FC<ImportPaneProps> = ({
   const [rowSeparator, setRowSeparator] = useState("newline");
   const [customTermSeparator, setCustomTermSeparator] = useState(" - ");
   const [customRowSeparator, setCustomRowSeparator] = useState("\\n\\n");
+
+  const [extractingName, setExtractingName] = useState(false);
 
   // Helper: parse the import text whenever user changes text or separators
   const parseImportText = (text: string) => {
@@ -81,6 +85,27 @@ const ImportPane: React.FC<ImportPaneProps> = ({
     customRowSeparator,
     setWordPairs,
   ]);
+
+  const onContinue = () => {
+    setSecondStage(true);
+  };
+
+  const onContinueAndExtractName = async () => {
+    setExtractingName(true);
+    setSecondStage(true);
+    const request: ExtractNameRequest = {
+      wordpairs: wordPairs,
+    };
+    const {success, data, error: apiError} = await api.decks.extractName(request);
+    if (!success) {
+      toast.error("Failed to extract name. Please enter deck name, languageFrom, and languageTo manually.");
+    } else if (data) {
+      setDeckName(data.name);
+      setFromLanguage(data.languageFrom);
+      setToLanguage(data.languageTo);
+    }
+    setExtractingName(false);
+  }
 
   // Handle drop files
   const handleFile = (file: File) => {
@@ -324,7 +349,7 @@ const ImportPane: React.FC<ImportPaneProps> = ({
           {/* Continue button if we have some wordPairs */}
           {wordPairs.length > 0 && (
             <Button
-              onClick={onContinue}
+              onClick={onContinueAndExtractName}
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#4f46e5] rounded-lg hover:bg-[#4338ca] text-white"
             >
               Continue
@@ -336,38 +361,89 @@ const ImportPane: React.FC<ImportPaneProps> = ({
         <div className="space-y-4">
           <div className="flex gap-4">
             <div className="w-1/2 space-y-2">
-              <label className="block text-sm font-medium">From Language</label>
+              <label className="block text-sm font-medium flex items-center">
+                From Language
+                {extractingName && (
+                  <div className="ml-2">
+                    <Circles
+                      height="16"
+                      width="16"
+                      color="#4f46e5"
+                      ariaLabel="extracting-language"
+                      visible={true}
+                    />
+                  </div>
+                )}
+              </label>
               <Input
                 type="text"
                 name="fromLanguage"
                 placeholder="e.g., English"
                 value={fromLanguage}
                 onChange={(e) => setFromLanguage(e.target.value)}
-                disabled={generating}
+                disabled={generating || extractingName}
                 className="bg-[#1a1a1a] border-gray-600"
               />
             </div>
             <div className="w-1/2 space-y-2">
-              <label className="block text-sm font-medium">To Language</label>
+              <label className="block text-sm font-medium flex items-center">
+                To Language
+                {extractingName && (
+                  <div className="ml-2">
+                    <Circles
+                      height="16"
+                      width="16"
+                      color="#4f46e5"
+                      ariaLabel="extracting-language"
+                      visible={true}
+                    />
+                  </div>
+                )}
+              </label>
               <Input
                 type="text"
                 name="toLanguage"
                 placeholder="e.g., Spanish"
                 value={toLanguage}
                 onChange={(e) => setToLanguage(e.target.value)}
-                disabled={generating}
+                disabled={generating || extractingName}
                 className="bg-[#1a1a1a] border-gray-600"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Deck Name</label>
+            <label className="block text-sm font-medium flex items-center">
+              Deck Name
+              {extractingName && (
+                <div className="ml-2">
+                  <Circles
+                    height="16"
+                    width="16"
+                    color="#4f46e5"
+                    ariaLabel="extracting-name"
+                    visible={true}
+                  />
+                </div>
+              )}
+              <div className="ml-2">
+                  <MutatingDots
+                    height="14"
+                    width="14"
+                    radius="2"
+                    color="#4f46e5"
+                    secondaryColor="#4f46e5"
+                    ariaLabel="extracting-name"
+                    visible={true}
+                  />
+                </div>
+            </label>
             <Input
               type="text"
               name="deckName"
               placeholder="Name for your deck"
               value={deckName}
               onChange={(e) => setDeckName(e.target.value)}
+              disabled={extractingName}
               className="bg-[#1a1a1a] border-gray-600"
             />
           </div>
