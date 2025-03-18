@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 interface NewDeckTileProps {
   onClick: () => void;
+  prefetch: () => void;
 }
 
-const NewDeckTile: React.FC<NewDeckTileProps> = ({ onClick }) => {
+const NewDeckTile: React.FC<NewDeckTileProps> = ({ onClick, prefetch }) => {
+  useEffect(() => {
+    prefetch();
+  }, [prefetch]);
   return (
     <div
       onClick={onClick}

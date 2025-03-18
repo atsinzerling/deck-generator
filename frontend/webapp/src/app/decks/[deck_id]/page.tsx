@@ -35,6 +35,7 @@ import { countdownRedirect } from "@/components/deckpage/countdownRedirect";
 import { fisherYatesShuffle } from "@/lib/utils";
 import { PreserveToggle } from "@/components/PreserveToggle";
 import { ChevronsLeftIcon } from "lucide-react";
+import { useDeckStore } from "@/store/deckStore";
 
 const DeckPage: React.FC = () => {
   const params = useParams();
@@ -63,16 +64,34 @@ const DeckPage: React.FC = () => {
   const rightPaneRef = useRef<HTMLDivElement>(null);
   const [leftPaneHeight, setLeftPaneHeight] = useState<number | null>(null);
 
-
+  // Get data from the store
+  const { currentDeck, wordPairs, clearDeckData } = useDeckStore();
+  
   useEffect(() => {
     const fetchDeckData = async () => {
       setLoading(true);
+      
+      if (currentDeck && currentDeck.id === deckId && wordPairs.length > 0) {
+        setOriginalWordPairs(wordPairs as WordPairUpdateInput[]);
+        setDraftWordPairs(wordPairs as WordPairUpdateInput[]);
+        setOriginalDeck(currentDeck);
+        setDraftDeck(currentDeck);
+        setEditedName(currentDeck.name);
+        
+        // Clear the store data to avoid stale data on future visits
+        clearDeckData();
+        setLoading(false);
+        console.log("using store data");
+        return;
+      }
+      
+      // Otherwise, fetch the data from the API as usual
       const { success, data: deckData, error: deckError } = await api.decks.getDeckById(
         deckId,
         true
       );
+      
       if (!success) {
-        // if (deckError?.code === 404) { router.push("/notfound"); return; }
         startCountdownRedirect({
           message: "Failed to fetch deck data.",
           redirectPath: "/dashboard",
@@ -89,7 +108,7 @@ const DeckPage: React.FC = () => {
     };
 
     fetchDeckData();
-  }, [deckId]);
+  }, [deckId, currentDeck, wordPairs, clearDeckData]);
 
 
   useLayoutEffect(() => {

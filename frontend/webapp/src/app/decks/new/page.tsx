@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { DeckCreateInput, LLMDeck, WordPairInput, WordPairSummary } from "@/types/decks";
+import { DeckCreateInput, DeckSummary, LLMDeck, WordPairInput, WordPairSummary } from "@/types/decks";
 import { GenerateDeckRequest, RefineDeckRequest } from "@/types/decks";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,7 @@ import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import ImportPane from "@/components/newpage/ImportPane";
 import GeneratePane from "@/components/newpage/GeneratePane";
+import { useDeckStore } from "@/store/deckStore";
 
 const NewDeck: React.FC = () => {
   const [deckName, setDeckName] = useState("");
@@ -41,6 +42,10 @@ const NewDeck: React.FC = () => {
   const [leftPaneHeight, setLeftPaneHeight] = useState<number | null>(null);
   const [resetKey, setResetKey] = useState(0);
 
+  const setDeckData = useDeckStore((state) => state.setDeckData);
+
+  const router = useRouter();
+
   useEffect(() => {
     const updateHeight = () => {
       if (leftPaneRef.current) {
@@ -55,10 +60,9 @@ const NewDeck: React.FC = () => {
     return () => window.removeEventListener("resize", updateHeight);
   }, [secondStage, selectedTab]);
 
-  const router = useRouter();
-
   const handleSave = async () => {
     setGenerating(true);
+    toast.loading("Creating your deck...");
 
     const payload : DeckCreateInput = {
       name: deckName || `${theme} Deck`,
@@ -75,11 +79,16 @@ const NewDeck: React.FC = () => {
       data,
       error: apiError,
     } = await api.decks.createDeck(payload);
+    toast.dismiss();
     if (!success) {
       toast.error("Failed to save deck.");
     } else if (data) {
+      setDeckData(data as DeckSummary, data.wordpairs || []);
       toast.success("Deck saved successfully!");
-      router.push(`/decks/${data.id}`);
+      router.prefetch(`/decks/${data.id}`);
+      setTimeout(() => {
+        router.replace(`/decks/${data.id}`);
+      }, 100);
     }
     setGenerating(false);
   };

@@ -12,6 +12,7 @@ interface DeckTileProps {
   cardCount?: number;
   lastModified?: string;
   onClick: () => void;
+  onMouseEnter: () => void;
 }
 
 const DeckTile: React.FC<DeckTileProps> = ({ 
@@ -20,11 +21,13 @@ const DeckTile: React.FC<DeckTileProps> = ({
   languageTo, 
   cardCount = 0,
   lastModified,
-  onClick 
+  onClick,
+  onMouseEnter
 }) => {
   return (
     <Card 
       onClick={onClick} 
+      onMouseEnter={onMouseEnter}
       className="cursor-pointer hover:bg-[#2f2f2f] transition-colors duration-200 bg-[#242424] text-gray-200 border-[#404040]"
     >
       <CardHeader>

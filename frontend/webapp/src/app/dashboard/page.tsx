@@ -27,10 +27,6 @@ const Dashboard: React.FC = () => {
     fetchDecks();
   }, []);
 
-  const handleNewDeck = () => {
-    router.push("/decks/new");
-  };
-
   return (
     <div className="min-h-screen w-full font-roboto bg-[#1a1a1a] text-gray-200 p-8">
       <div className="max-w-7xl mx-auto">
@@ -40,18 +36,26 @@ const Dashboard: React.FC = () => {
             <SkeletonDashboard />
           ) : (
             <>
-              <NewDeckTile onClick={handleNewDeck} />
-              
-          {decks.map((deck) => (
-            <DeckTile
-              key={deck.id}
-              id={Number(deck.id)}
-              name={deck.name}
-              languageFrom={deck.languageFrom}
-              languageTo={deck.languageTo}
-              cardCount={deck.wordpairCount || 0}
-              lastModified={deck.lastModified}
-              onClick={() => router.push(`/decks/${deck.id}`)}
+              <NewDeckTile
+                onClick={() => {
+                  router.push("/decks/new");
+                }}
+                prefetch={() => {
+                  router.prefetch("/decks/new");
+                }}
+              />
+
+              {decks.map((deck) => (
+                <DeckTile
+                  key={deck.id}
+                  id={Number(deck.id)}
+                  name={deck.name}
+                  languageFrom={deck.languageFrom}
+                  languageTo={deck.languageTo}
+                  cardCount={deck.wordpairCount || 0}
+                  lastModified={deck.lastModified}
+                  onClick={() => router.push(`/decks/${deck.id}`)}
+                  onMouseEnter={() => router.prefetch(`/decks/${deck.id}`)}
                 />
               ))}
             </>
@@ -62,4 +66,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
