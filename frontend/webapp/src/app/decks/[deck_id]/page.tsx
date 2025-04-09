@@ -383,6 +383,9 @@ const DeckPage: React.FC = () => {
                           <p>
                             From {draftDeck.languageFrom} to {draftDeck.languageTo}
                           </p>
+                          <p>
+                            {draftWordPairs.length} cards
+                          </p>
                           <p>Created on {formattedCreatedAt}</p>
                           {formattedCreatedAt !== formattedModifiedAt && (
                             <p>Modified on {formattedModifiedAt}</p>
